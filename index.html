@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Casa</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<style>
+:root { --bg:#111; --fg:#eee; --card:#1e1e1e; --accent:#4a9; }
+* { box-sizing:border-box; margin:0; }
+body { font-family:system-ui; background:var(--bg); color:var(--fg); padding:1rem; max-width:480px; margin:0 auto; }
+h1 { font-size:1.3rem; margin-bottom:1rem; }
+.card { background:var(--card); border-radius:12px; padding:1rem; margin-bottom:1rem; }
+label { display:block; font-size:.85rem; opacity:.7; margin-bottom:.3rem; }
+input,textarea { width:100%; padding:.6rem; border:1px solid #333; border-radius:8px; background:#222; color:var(--fg); font-size:1rem; }
+textarea { resize:vertical; min-height:60px; }
+.row { display:flex; gap:.5rem; }
+.row > * { flex:1; }
+button { width:100%; padding:.8rem; margin-top:1rem; border:none; border-radius:8px; background:var(--accent); color:#000; font-size:1rem; font-weight:600; cursor:pointer; }
+button:disabled { opacity:.5; }
+.status { text-align:center; margin-top:.5rem; font-size:.8rem; opacity:.6; }
+.task { display:flex; align-items:center; gap:.5rem; padding:.4rem 0; }
+.task input[type=checkbox] { width:20px; height:20px; accent-color:var(--accent); }
+.task span { flex:1; }
+.task .del { color:#f55; cursor:pointer; font-size:1.2rem; }
+#token-area { display:none; margin-top:1rem; padding:1rem; background:var(--card); border-radius:12px; }
+</style>
+</head>
+<body>
+<h1>🏠 Casa</h1>
+
+<div class="card">
+  <label>Areia hoje (g)</label>
+  <input id="sand" type="number" inputmode="numeric" placeholder="ex: 150">
+</div>
+
+<div class="card">
+  <label>Ração hoje (g)</label>
+  <input id="food" type="number" inputmode="numeric" placeholder="ex: 80">
+</div>
+
+<div class="card">
+  <label>Nota dos ânimos</label>
+  <textarea id="note" placeholder="Como tá o clima em casa..."></textarea>
+</div>
+
+<div class="card">
+  <label>Tarefas</label>
+  <div id="tasks"></div>
+  <div class="row" style="margin-top:.5rem">
+    <input id="new-task" placeholder="Nova tarefa...">
+    <button style="width:auto;padding:.4rem .8rem" onclick="addTask()">+</button>
+  </div>
+</div>
+
+<button id="save" onclick="save()">Salvar</button>
+<div class="status" id="status"></div>
+
+<div id="token-area">
+  <label>GitHub Token (fine-grained, write em cats.json)</label>
+  <input id="token" type="password" placeholder="github_pat_...">
+  <button onclick="saveToken()">Salvar token</button>
+</div>
+
+<script>
+const REPO = "SEU_USER/kindle-casa"; // ← MUDA AQUI
+let data = null;
+
+async function load() {
+  const r = await fetch(`/cats.json?t=${Date.now()}`);
+  data = await r.json();
+  render();
+}
+
+function render() {
+  document.getElementById('note').value = data.note || '';
+  const el = document.getElementById('tasks');
+  el.innerHTML = '';
+  (data.tasks||[]).forEach((t,i) => {
+    el.innerHTML += `<div class="task"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${i})"><span>${t.text}</span><span class="del" onclick="delTask(${i})">×</span></div>`;
+  });
+}
+
+function toggleTask(i){ data.tasks[i].done = !data.tasks[i].done; }
+function delTask(i){ data.tasks.splice(i,1); render(); }
+function addTask(){
+  const inp = document.getElementById('new-task');
+  if(!inp.value.trim()) return;
+  data.tasks.push({text:inp.value.trim(), done:false});
+  inp.value=''; render();
+}
+
+async function save() {
+  const token = localStorage.getItem('gh_token');
+  if(!token) { document.getElementById('token-area').style.display='block'; return; }
+  const sand = document.getElementById('sand').value;
+  const food = document.getElementById('food').value;
+  const today = new Date().toISOString().slice(0,10);
+
+  if(sand) data.sand.push({date:today, grams:+sand});
+  if(food) data.food.push({date:today, grams:+food});
+  data.note = document.getElementById('note').value;
+
+  // trim: manter últimos 45 dias
+  data.sand = data.sand.filter(e => e.date >= daysAgo(5));
+  data.food = data.food.filter(e => e.date >= daysAgo(45));
+
+  const btn = document.getElementById('save');
+  btn.disabled = true;
+  document.getElementById('status').textContent = 'Salvando...';
+
+  try {
+    // GET current sha
+    const meta = await (await fetch(`https://api.github.com/repos/${REPO}/contents/cats.json`, {headers:{Authorization:`token ${token}`}})).json();
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+    await fetch(`https://api.github.com/repos/${REPO}/contents/cats.json`, {
+      method:'PUT',
+      headers:{'Authorization':`token ${token}`,'Content-Type':'application/json'},
+      body: JSON.stringify({message:`update: ${new Date().toLocaleString('pt-BR')}`, content, sha:meta.sha})
+    });
+    document.getElementById('status').textContent = '✓ Salvo!';
+    document.getElementById('sand').value = '';
+    document.getElementById('food').value = '';
+  } catch(e) {
+    document.getElementById('status').textContent = 'Erro: '+e.message;
+  }
+  btn.disabled = false;
+}
+
+function daysAgo(n){ return new Date(Date.now()-n*864e5).toISOString().slice(0,10); }
+function saveToken(){ localStorage.setItem('gh_token', document.getElementById('token').value); document.getElementById('token-area').style.display='none'; }
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+load();
+</script>
+</body>
+</html>   
