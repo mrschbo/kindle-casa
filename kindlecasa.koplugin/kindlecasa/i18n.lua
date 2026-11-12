@@ -1,4 +1,4 @@
--- Tiny translation layer. English is the source language; add a table below for more languages.
+-- Tiny translation layer for the Kindle Casa dashboard.
 -- Usage:  local T = require("kindlecasa/i18n").t   T("Back: close")
 --         local F = require("kindlecasa/i18n").f   F("%d open", n)
 local I = { lang = "en" }
@@ -17,19 +17,11 @@ local NAMES = {
         MONTHS = { "janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro" },
         MONTHS_SHORT = { "jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez" },
     },
-    de = {
-        DAYS = { "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag" },
-        DAYS_SHORT = { "Mo", "Di", "Mi", "Do", "Fr", "Sa", "So" },
-        MONTHS = { "Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
-            "August", "September", "Oktober", "November", "Dezember" },
-        MONTHS_SHORT = { "Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez" },
-    },
 }
 
 local TRANSLATIONS = {
     pt = {
         ["Open Painel da Casa"] = "Abrir painel", ["Open when KOReader starts"] = "Abrir ao iniciar o KOReader",
-        ["About & folders"] = "Sobre e pastas",
         ["About & folders"] = "Sobre e pastas", ["Landscape"] = "Paisagem", ["Portrait"] = "Retrato",
         ["Refresh everything"] = "Atualizar tudo", ["Reload configuration"] = "Recarregar configuração",
         ["Hide selection frame"] = "Ocultar seleção", ["Show selection frame"] = "Mostrar seleção",
@@ -43,9 +35,9 @@ local TRANSLATIONS = {
 
 }
 
-I.available = { "pt" }
+I.available = { "en", "pt" }
 
--- accepts "de", "de_DE", "de-AT", "en_US", "C", …
+-- Accepts "pt", "pt_BR", "en_US", "C", …
 function I.set(lang)
     lang = tostring(lang or "en"):lower():match("^(%a%a)") or "en"
     I.lang = (TRANSLATIONS[lang] or lang == "en") and lang or "en"
