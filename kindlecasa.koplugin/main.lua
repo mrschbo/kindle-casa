@@ -234,6 +234,13 @@ function InkDeck:addToMainMenu(menu_items)
                                 gh.refresh_minutes = tonumber(gh.refresh_minutes) or 15
                                 self.config.github = gh
                                 self:saveConfig(self.config)
+                                if self.view and self.view.dash then
+                                    for _, entry in ipairs(self.view.dash:allInstances()) do
+                                        if entry.inst.syncPanel then entry.inst.last_panel_sync = 0 end
+                                        entry.inst.last_update = 0
+                                    end
+                                    self.view:scheduleTick(0.5)
+                                end
                                 UIManager:close(dialog)
                                 UIManager:show(InfoMessage:new{ text = gh.token ~= "" and "Token salvo. O painel buscará os dados na próxima atualização." or "Token removido. O painel usará os dados locais." })
                             end },
