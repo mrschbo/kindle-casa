@@ -1,4 +1,4 @@
--- Reminders / to-dos stored on the Kindle (reminders.json in the InkDeck folder)
+-- Reminders / to-dos stored on the Kindle (reminders.json in the Kindle Casa folder)
 local Base = require("kindlecasa/widgets/base")
 local UI = require("kindlecasa/ui")
 local U = require("kindlecasa/util")
