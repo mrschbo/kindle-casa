@@ -31,7 +31,7 @@ local function text(c, s, x, y, size, opts)
 end
 local function section(c, x, y, w, title, icon)
     if icon then c:icon(icon, x, y + 1, 25, { color = "black" }) end
-    text(c, title, x + (icon and 36 or 0), y, 24, { bold = true })
+    text(c, title, x + (icon and 36 or 0), y, 28, { bold = true })
     c:hline(x, y + 37, w, 2, "black")
 end
 function Casa:init()
@@ -112,13 +112,13 @@ function Casa:drawTile(c, p, focused)
     local function consumable(cx, item, fallback)
         item = item or fallback
         local d = days_until(item.date)
-        text(c, item.label or "", cx, block_y, 24, { bold = true })
+        text(c, item.label or "", cx, block_y, 28, { bold = true })
         text(c, d and (d == 0 and "Hoje" or (math.abs(d) .. (d > 0 and " dias" or " dias"))) or fmt_date(item.date), cx, block_y + 36, 36, { bold = true })
-        text(c, d and (d > 0 and "até repor" or "desde a previsão") or "previsão", cx, block_y + 78, 16, { color = "dark" })
+        text(c, d and (d > 0 and "até repor" or "desde a previsão") or "previsão", cx, block_y + 78, 20, { color = "dark" })
         local total = tonumber(item.total_days) or 0
         local pct = total > 0 and clamp(math.floor((d or 0) / total * 100 + 0.5), 0, 100) or 0
         UI.progress(c, cx, block_y + 112, half - 18, 18, pct / 100, { border = 2 })
-        text(c, pct .. "% restante", cx, block_y + 140, 17, { bold = true })
+        text(c, pct .. "% restante", cx, block_y + 140, 21, { bold = true })
     end
     consumable(x, self.s.sand, { label = "Areia", date = "", total_days = 0 })
     c:vline(x + half + 14, block_y - 2, 166, 1, "gray")
@@ -143,13 +143,13 @@ function Casa:drawTile(c, p, focused)
                 c:icon(icon, xx, row_y + shown * 48 + 2, 19, { color = "black" })
                 local value = bills and (it.value or "") or ""
                 local right = value ~= "" and tostring(value) or nil
-                text(c, label, xx + 28, row_y + shown * 48, 18, { color = done and "gray" or "black", maxw = width - 36 - (right and 72 or 0) })
-                if right then text(c, right, xx + width - 76, row_y + shown * 48, 16, { bold = true, maxw = 76, align = "right" }) end
-                if done then c:hline(xx + 28, row_y + shown * 48 + 11, math.min(width - 40, c:measure(label, { size = 18 })), 1, "gray") end
+                text(c, label, xx + 28, row_y + shown * 48, 22, { color = done and "gray" or "black", maxw = width - 36 - (right and 72 or 0) })
+                if right then text(c, right, xx + width - 76, row_y + shown * 48, 20, { bold = true, maxw = 76, align = "right" }) end
+                if done then c:hline(xx + 28, row_y + shown * 48 + 11, math.min(width - 40, c:measure(label, { size = 22 })), 1, "gray") end
                 shown = shown + 1
             end
         end
-        if shown == 0 then text(c, bills and "Sem contas anotadas" or "Sem tarefas anotadas", xx, row_y, 16, { color = "gray" }) end
+        if shown == 0 then text(c, bills and "Sem contas anotadas" or "Sem tarefas anotadas", xx, row_y, 20, { color = "gray" }) end
     end
     draw_items(self.s.tasks, x, colw, false)
     c:vline(x + colw + 15, lists_y + 4, 280, 1, "gray")
@@ -164,9 +164,9 @@ function Casa:drawTile(c, p, focused)
     local function cycle_line(label, item, yy)
         item = item or {}
         local d = days_until(item.date)
-        text(c, label, x + 4, yy, 22, { bold = true })
-        text(c, item.note ~= "" and (item.note or "") or (d and (d == 0 and "Hoje" or (d > 0 and (d .. " dias") or ("há " .. math.abs(d) .. " dias"))) or "Sem data"), x + 72, yy, 19, { maxw = w - 210 })
-        text(c, fmt_date(item.date), x + w - 132, yy, 17, { bold = true, align = "right", maxw = 132 })
+        text(c, label, x + 4, yy, 26, { bold = true })
+        text(c, item.note ~= "" and (item.note or "") or (d and (d == 0 and "Hoje" or (d > 0 and (d .. " dias") or ("há " .. math.abs(d) .. " dias"))) or "Sem data"), x + 72, yy, 23, { maxw = w - 210 })
+        text(c, fmt_date(item.date), x + w - 132, yy, 21, { bold = true, align = "right", maxw = 132 })
     end
     cycle_line("K.", self.s.cycles and self.s.cycles.K, line_y)
     cycle_line("E.", self.s.cycles and self.s.cycles.E, line_y + 44)
@@ -175,8 +175,8 @@ function Casa:drawTile(c, p, focused)
     if house_note and tostring(house_note) ~= "" then
         local note_y = line_y + 92
         c:hline(x, note_y - 12, w, 1, "gray")
-        text(c, "ANOTAÇÃO", x + 4, note_y, 15, { bold = true, color = "dark" })
-        text(c, tostring(house_note), x + 4, note_y + 24, 18, { maxw = w - 8 })
+        text(c, "ANOTAÇÃO", x + 4, note_y, 19, { bold = true, color = "dark" })
+        text(c, tostring(house_note), x + 4, note_y + 24, 22, { maxw = w - 8 })
     end
 end
 function Casa:drawFull(c, W, H)
