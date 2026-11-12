@@ -14,7 +14,7 @@ local Core = require("kindlecasa/core")
 local View = InputContainer:extend{
     name = "kindlecasa_view",
     covers_fullscreen = true,
-    plugin = nil, -- the InkDeck plugin instance (for config load/save)
+    plugin = nil, -- the Casa plugin instance (for config load/save)
     config = nil,
     ctx = nil,
 }
@@ -113,9 +113,9 @@ function View:paintTo(bb, x, y)
     local c = Canvas.new(bb, x, y, self.dimen.w, self.dimen.h)
     local ok, err = pcall(self.dash.draw, self.dash, c)
     if not ok then
-        logger.err("InkDeck: draw failed:", err)
+        logger.err("Casa: draw failed:", err)
         bb:paintRect(x, y, self.dimen.w, self.dimen.h, Canvas.color("white"))
-        pcall(c.text, c, "InkDeck error: " .. tostring(err), 20, 60, { size = 16, maxw = self.dimen.w - 40 })
+        pcall(c.text, c, "Casa error: " .. tostring(err), 20, 60, { size = 16, maxw = self.dimen.w - 40 })
     end
 end
 
