@@ -31,3 +31,18 @@ O arquivo `painel.json`, armazenado no repositório privado, contém as informa�
 ## Licença
 
 Projeto derivado do InkDeck. Consulte a licença MIT e preserve os créditos do projeto original.
+
+
+## Sincronização no Kindle
+
+O plugin consulta o arquivo privado `painel.json` pela API do GitHub e mantém uma cópia em cache no Kindle. Se estiver sem Wi-Fi ou o GitHub estiver indisponível, continua exibindo o último painel sincronizado.
+
+1. Crie um **Fine-grained personal access token** no GitHub.
+2. Em **Repository access**, selecione somente `kindle-casa-dados`.
+3. Em **Permissions → Repository permissions → Contents**, selecione **Read-only**.
+4. No Kindle, abra **KOReader → Ferramentas → Painel da Casa → Conectar dados do GitHub** e informe o token.
+5. O token fica no `config.json` local do Kindle. Não o publique nem o coloque no repositório público.
+
+A sincronização é somente de leitura: alterações são feitas no editor web, que grava no repositório privado. O plugin busca atualizações a cada 15 minutos (ajustável em `config.json`).
+
+O plugin usa a base técnica do [InkDeck](https://github.com/louiskl/inkdeck), sob licença MIT, mantendo os créditos e a licença originais.
