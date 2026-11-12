@@ -20,6 +20,7 @@ local Screen = Device.screen
 
 local Core = require("kindlecasa/core")
 local U = require("kindlecasa/util")
+local GitHub = require("kindlecasa/github")
 
 -- pick the language before any text is created
 local function applyLanguage(cfg)
@@ -105,6 +106,7 @@ function InkDeck:makeContext(cfg)
         data_dir = self:dataDir(),
         cache_dir = self:dataDir() .. "/cache",
         config = cfg,
+        fetchCasaData = function() return GitHub.getPanel(cfg.github, ctx.net) end,
     }
     ctx.battery = function()
         local ok, v = pcall(function() return Device:getPowerDevice():getCapacity() end)
@@ -212,6 +214,34 @@ function InkDeck:addToMainMenu(menu_items)
                 text = T("Abrir ao iniciar o KOReader"),
                 checked_func = function() return G_reader_settings:isTrue("kindlecasa_autostart") end,
                 callback = function() G_reader_settings:flipNilOrFalse("kindlecasa_autostart") end,
+            },
+            {
+                text = "Conectar dados do GitHub",
+                keep_menu_open = true,
+                callback = function()
+                    local InputDialog = require("ui/widget/inputdialog")
+                    local dialog
+                    local gh = self.config.github or { owner = "mrschbo", repo = "kindle-casa-dados", path = "painel.json", refresh_minutes = 15 }
+                    dialog = InputDialog:new{
+                        title = "Token GitHub (somente leitura)",
+                        input = gh.token or "",
+                        input_type = "password",
+                        buttons = { {
+                            { text = T("Cancel"), id = "close", callback = function() UIManager:close(dialog) end },
+                            { text = T("Save"), is_enter_default = true, callback = function()
+                                gh.token = dialog:getInputText()
+                                gh.owner, gh.repo, gh.path = "mrschbo", "kindle-casa-dados", "painel.json"
+                                gh.refresh_minutes = tonumber(gh.refresh_minutes) or 15
+                                self.config.github = gh
+                                self:saveConfig(self.config)
+                                UIManager:close(dialog)
+                                UIManager:show(InfoMessage:new{ text = gh.token ~= "" and "Token salvo. O painel buscará os dados na próxima atualização." or "Token removido. O painel usará os dados locais." })
+                            end },
+                        } },
+                    }
+                    UIManager:show(dialog)
+                    dialog:onShowKeyboard()
+                end,
             },
             {
                 text = T("Sobre e pastas"),
