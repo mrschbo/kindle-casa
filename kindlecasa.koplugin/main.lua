@@ -85,10 +85,16 @@ function KindleCasa:loadConfig()
         })
         return Core.defaultConfig()
     end
-    -- fill in missing top-level defaults
+    -- Fill defaults, including nested GitHub settings, without overwriting user values.
     local def = Core.defaultConfig()
     for k, v in pairs(def) do
-        if cfg[k] == nil then cfg[k] = v end
+        if cfg[k] == nil then
+            cfg[k] = v
+        elseif type(v) == "table" and type(cfg[k]) == "table" then
+            for nk, nv in pairs(v) do
+                if cfg[k][nk] == nil then cfg[k][nk] = nv end
+            end
+        end
     end
     return cfg
 end
@@ -221,6 +227,8 @@ function KindleCasa:addToMainMenu(menu_items)
                 callback = function()
                     local InputDialog = require("ui/widget/inputdialog")
                     local dialog
+                    -- This menu can be opened before the dashboard has ever been launched.
+                    if type(self.config) ~= "table" then self.config = self:loadConfig() end
                     local gh = self.config.github or { owner = "mrschbo", repo = "kindle-casa-dados", path = "painel.json", refresh_minutes = 15 }
                     dialog = InputDialog:new{
                         title = "Token GitHub (somente leitura)",
