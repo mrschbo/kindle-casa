@@ -8,13 +8,6 @@
   "full_refresh_every": 12,
   "keep_awake": true,
   "dashboard_mode": "casa",
-  "bridge": {
-    "url": ""
-  },
-  "homeassistant": {
-    "url": "",
-    "token": ""
-  },
   "github": {
     "owner": "mrschbo",
     "repo": "kindle-casa-dados",
@@ -23,63 +16,27 @@
     "refresh_minutes": 15
   },
   "grid": {
-    "portrait": {
-      "cols": 1,
-      "rows": 1
-    },
-    "landscape": {
-      "cols": 1,
-      "rows": 1
-    }
+    "portrait": { "cols": 1, "rows": 1 },
+    "landscape": { "cols": 1, "rows": 1 }
   },
-  "pages": [
-    {
-      "name": "Casa",
-      "widgets": [
-        {
-          "type": "casa",
-          "size": "l",
-          "settings": {
-            "city": "Joinville",
-            "lat": -26.3044,
-            "lon": -48.8456,
-            "sand": {
-              "label": "Areia",
-              "date": "2026-11-15",
-              "total_days": 45
-            },
-            "food": {
-              "label": "Ração",
-              "date": "2026-12-07",
-              "total_days": 45
-            },
-            "tasks": [
-              {
-                "text": "Exemplo: limpar filtros",
-                "done": false
-              }
-            ],
-            "bills": [
-              {
-                "name": "Exemplo: internet",
-                "value": "R$ 100",
-                "due": "2026-11-20",
-                "paid": false
-              }
-            ],
-            "cycles": {
-              "K": {
-                "date": "2026-11-19",
-                "note": ""
-              },
-              "E": {
-                "date": "2026-11-25",
-                "note": ""
-              }
-            }
-          }
+  "pages": [{
+    "name": "Casa",
+    "widgets": [{
+      "type": "casa",
+      "size": "l",
+      "settings": {
+        "city": "Joinville",
+        "lat": -26.3044,
+        "lon": -48.8456,
+        "sand": { "label": "Areia", "date": "", "total_days": 45 },
+        "food": { "label": "Ração", "date": "", "total_days": 45 },
+        "tasks": [],
+        "bills": [],
+        "cycles": {
+          "K": { "date": "", "note": "" },
+          "E": { "date": "", "note": "" }
         }
-      ]
-    }
-  ]
+      }
+    }]
+  }]
 }
