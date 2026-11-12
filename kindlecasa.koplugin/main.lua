@@ -1,10 +1,10 @@
 --[[--
-InkDeck – a home dashboard for e-ink devices, running inside KOReader.
+KindleCasa – a home dashboard for e-ink devices, running inside KOReader.
 
-Menu: Tools → InkDeck. Configuration lives in the "kindle-casa" folder
+Menu: Tools → KindleCasa. Configuration lives in the "kindle-casa" folder
 (on a Kindle: the USB drive root, i.e. /mnt/us/kindle-casa/config.json).
 
-@module koplugin.InkDeck
+@module koplugin.KindleCasa
 --]]
 
 local DataStorage = require("datastorage")
@@ -33,16 +33,16 @@ end
 applyLanguage(nil)
 local json = require("kindlecasa/json")
 
-local InkDeck = WidgetContainer:extend{
+local KindleCasa = WidgetContainer:extend{
     name = "kindlecasa",
     is_doc_only = false,
 }
 
 local autostart_done = false
 
-function InkDeck:init()
+function KindleCasa:init()
     Dispatcher:registerAction("kindlecasa_show", {
-        category = "none", event = "ShowInkDeck", title = T("Open InkDeck"), general = true,
+        category = "none", event = "ShowPainelDaCasa", title = T("Open Painel da Casa"), general = true,
     })
     self.ui.menu:registerToMainMenu(self)
     if not autostart_done and G_reader_settings:isTrue("kindlecasa_autostart") and not self.ui.document then
@@ -51,15 +51,15 @@ function InkDeck:init()
     end
 end
 
-function InkDeck:dataDir()
+function KindleCasa:dataDir()
     if Device:isKindle() then return "/mnt/us/kindle-casa" end
     if Device:isKobo() then return "/mnt/onboard/kindle-casa" end
     return DataStorage:getDataDir() .. "/kindle-casa"
 end
 
-function InkDeck:configPath() return self:dataDir() .. "/config.json" end
+function KindleCasa:configPath() return self:dataDir() .. "/config.json" end
 
-function InkDeck:loadConfig()
+function KindleCasa:loadConfig()
     local dir = self:dataDir()
     U.mkdir(dir)
     U.mkdir(dir .. "/photos")
@@ -81,7 +81,7 @@ function InkDeck:loadConfig()
     local cfg, err = U.loadJson(path)
     if type(cfg) ~= "table" then
         UIManager:show(InfoMessage:new{
-            text = T("InkDeck: config.json is invalid and was ignored.") .. "\n\n" .. tostring(err),
+            text = T("Painel da Casa: config.json is invalid and was ignored.") .. "\n\n" .. tostring(err),
         })
         return Core.defaultConfig()
     end
@@ -93,12 +93,12 @@ function InkDeck:loadConfig()
     return cfg
 end
 
-function InkDeck:saveConfig(cfg)
+function KindleCasa:saveConfig(cfg)
     local ok, err = pcall(U.saveJson, self:configPath(), cfg)
-    if not ok then logger.warn("InkDeck: could not save config", err) end
+    if not ok then logger.warn("Painel da Casa: could not save config", err) end
 end
 
-function InkDeck:makeContext(cfg)
+function KindleCasa:makeContext(cfg)
     local NetworkMgr = require("ui/network/manager")
     local online = true
     local ctx = {
@@ -143,7 +143,7 @@ function InkDeck:makeContext(cfg)
     return ctx
 end
 
-function InkDeck:keepAwake(on)
+function KindleCasa:keepAwake(on)
     if self.config and self.config.keep_awake == false then return end
     local PluginShare = require("pluginshare")
     PluginShare.pause_auto_suspend = on
@@ -152,7 +152,7 @@ function InkDeck:keepAwake(on)
     end
 end
 
-function InkDeck:show()
+function KindleCasa:show()
     if self.view and not self.view.closed then return end
     local cfg = self:loadConfig()
     self.config = cfg
@@ -182,12 +182,12 @@ function InkDeck:show()
     end)
 end
 
-function InkDeck:reload(view)
+function KindleCasa:reload(view)
     view:close()
     UIManager:nextTick(function() self:show() end)
 end
 
-function InkDeck:onViewClosed(view)
+function KindleCasa:onViewClosed(view)
     if self.view == view then self.view = nil end
     self:keepAwake(false)
     if self.prev_rotation and Screen:getRotationMode() ~= self.prev_rotation then
@@ -196,12 +196,12 @@ function InkDeck:onViewClosed(view)
     end
 end
 
-function InkDeck:onShowInkDeck()
+function KindleCasa:onShowPainelDaCasa()
     self:show()
     return true
 end
 
-function InkDeck:addToMainMenu(menu_items)
+function KindleCasa:addToMainMenu(menu_items)
     menu_items.kindle_casa = {
         text = T("Painel da Casa"),
         sorting_hint = "tools",
@@ -265,4 +265,4 @@ function InkDeck:addToMainMenu(menu_items)
     }
 end
 
-return InkDeck
+return KindleCasa
