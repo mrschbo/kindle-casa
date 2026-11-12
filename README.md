@@ -10,39 +10,25 @@ Painel doméstico personalizado para Kindle com KOReader.
 
 ## Editor
 
-O editor é publicado pelo GitHub Pages e permite atualizar:
+O editor é publicado pelo GitHub Pages e permite atualizar areia e ração dos gatos, tarefas, contas, datas de referência dos ciclos e anotações gerais.
 
-- Areia e ração dos gatos.
-- Tarefas domésticas.
-- Contas da casa.
-- Datas de referência dos ciclos.
-- Anotações gerais.
+## Privacidade e sincronização
 
-## Privacidade
+Os dados domésticos ficam no repositório privado `kindle-casa-dados`. O editor usa um token informado pelo usuário para gravar o arquivo. O plugin do Kindle consulta esse arquivo pela API do GitHub e mantém uma cópia em cache local.
 
-Os dados domésticos ficam no repositório privado `kindle-casa-dados`.
+1. Crie um Fine-grained personal access token com acesso somente ao repositório `kindle-casa-dados`.
+2. Em Repository permissions → Contents, conceda pelo menos Read-only.
+3. No Kindle, abra KOReader → Ferramentas → Painel da Casa → Conectar dados do GitHub e informe o token.
+4. O token fica no `config.json` local do Kindle. Não o publique nem o coloque no repositório público.
 
-O token de acesso é informado pelo usuário no editor e não deve ser incluído neste repositório.
+As alterações são feitas no editor web. O plugin apenas lê os dados e tenta sincronizar a cada 15 minutos. Sem Wi-Fi, continua exibindo o último painel sincronizado.
 
-## Estrutura de dados
+## Estrutura
 
-O arquivo `painel.json`, armazenado no repositório privado, contém as informações utilizadas pelo painel.
+- `index.html`: editor web.
+- `kindlecasa.koplugin/`: plugin KOReader.
+- `config-exemplo.json`: exemplo da configuração local.
 
-## Licença
+## Créditos e licença
 
-Projeto derivado do InkDeck. Consulte a licença MIT e preserve os créditos do projeto original.
-
-
-## Sincronização no Kindle
-
-O plugin consulta o arquivo privado `painel.json` pela API do GitHub e mantém uma cópia em cache no Kindle. Se estiver sem Wi-Fi ou o GitHub estiver indisponível, continua exibindo o último painel sincronizado.
-
-1. Crie um **Fine-grained personal access token** no GitHub.
-2. Em **Repository access**, selecione somente `kindle-casa-dados`.
-3. Em **Permissions → Repository permissions → Contents**, selecione **Read-only**.
-4. No Kindle, abra **KOReader → Ferramentas → Painel da Casa → Conectar dados do GitHub** e informe o token.
-5. O token fica no `config.json` local do Kindle. Não o publique nem o coloque no repositório público.
-
-A sincronização é somente de leitura: alterações são feitas no editor web, que grava no repositório privado. O plugin busca atualizações a cada 15 minutos (ajustável em `config.json`).
-
-O plugin usa a base técnica do [InkDeck](https://github.com/louiskl/inkdeck), sob licença MIT, mantendo os créditos e a licença originais.
+O projeto reutiliza componentes técnicos derivados do InkDeck, distribuído sob licença MIT. O crédito e o aviso de copyright originais são mantidos conforme os termos da licença. A interface, o painel doméstico e a integração de dados foram adaptados para o Kindle Casa.
