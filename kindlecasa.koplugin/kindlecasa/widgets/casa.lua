@@ -113,8 +113,8 @@ function Casa:drawTile(c, p, focused)
         item = item or fallback
         local d = days_until(item.date)
         text(c, item.label or "", cx, block_y, 28, { bold = true })
-        text(c, d and (d == 0 and "Hoje" or (math.abs(d) .. (d > 0 and " dias" or " dias"))) or fmt_date(item.date), cx, block_y + 36, 36, { bold = true })
-        text(c, d and (d > 0 and "até repor" or "desde a previsão") or "previsão", cx, block_y + 78, 20, { color = "dark" })
+        text(c, d and (d == 0 and "Hoje" or (d < 0 and ("há " .. math.abs(d) .. " dias") or (math.abs(d) .. " dias"))) or fmt_date(item.date), cx, block_y + 36, 40, { bold = true })
+        text(c, d and (d > 0 and "até repor" or (d < 0 and "estimativa ultrapassada" or "repor hoje")) or "previsão", cx, block_y + 78, 20, { color = "dark" })
         local total = tonumber(item.total_days) or 0
         local pct = total > 0 and clamp(math.floor((d or 0) / total * 100 + 0.5), 0, 100) or 0
         UI.progress(c, cx, block_y + 112, half - 18, 18, pct / 100, { border = 2 })
