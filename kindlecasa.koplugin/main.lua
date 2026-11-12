@@ -106,8 +106,8 @@ function InkDeck:makeContext(cfg)
         data_dir = self:dataDir(),
         cache_dir = self:dataDir() .. "/cache",
         config = cfg,
-        fetchCasaData = function() return GitHub.getPanel(cfg.github, ctx.net) end,
     }
+    ctx.fetchCasaData = function() return GitHub.getPanel(cfg.github, ctx.net) end
     ctx.battery = function()
         local ok, v = pcall(function() return Device:getPowerDevice():getCapacity() end)
         if ok and type(v) == "number" and v > 0 then return v end
