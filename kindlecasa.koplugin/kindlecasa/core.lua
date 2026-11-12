@@ -11,10 +11,7 @@ Core.__index = Core
 
 Core.VERSION = "0.2.0"
 
-Core.WIDGET_TYPES = {
-    "clock", "weather", "calendar", "news", "reminders", "lastfm",
-    "mediaplayer", "homeassistant", "photo", "countdown", "note", "spotify", "casa",
-}
+Core.WIDGET_TYPES = { "casa" }
 
 local registry = {}
 function Core.widgetClass(t)
@@ -37,7 +34,6 @@ function Core.defaultConfig(lang)
         full_refresh_every = 12,
         keep_awake = true,
         dashboard_mode = "casa",
-        bridge = { url = "" },
         homeassistant = { url = "", token = "" },
         github = { owner = "mrschbo", repo = "kindle-casa-dados", path = "painel.json", token = "", refresh_minutes = 15 },
         grid = { portrait = { cols = 1, rows = 1 }, landscape = { cols = 1, rows = 1 } },
