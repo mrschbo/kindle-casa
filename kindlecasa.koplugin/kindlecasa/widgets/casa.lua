@@ -170,6 +170,14 @@ function Casa:drawTile(c, p, focused)
     end
     cycle_line("K.", self.s.cycles and self.s.cycles.K, line_y)
     cycle_line("E.", self.s.cycles and self.s.cycles.E, line_y + 44)
+
+    local house_note = self.s.house and self.s.house.note
+    if house_note and tostring(house_note) ~= "" then
+        local note_y = line_y + 92
+        c:hline(x, note_y - 12, w, 1, "gray")
+        text(c, "ANOTAÇÃO", x + 4, note_y, 15, { bold = true, color = "dark" })
+        text(c, tostring(house_note), x + 4, note_y + 24, 18, { maxw = w - 8 })
+    end
 end
 function Casa:drawFull(c, W, H)
     self:drawTile(c, { x = 0, y = 0, w = W, h = H, cw = 1, ch = 1 }, false)
