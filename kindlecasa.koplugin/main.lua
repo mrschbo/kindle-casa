@@ -231,7 +231,7 @@ function KindleCasa:addToMainMenu(menu_items)
                     if type(self.config) ~= "table" then self.config = self:loadConfig() end
                     local gh = self.config.github or { owner = "mrschbo", repo = "kindle-casa-dados", path = "painel.json", refresh_minutes = 15 }
                     dialog = InputDialog:new{
-                        title = "Token GitHub (somente leitura)",
+                        title = "Token GitHub (acesso ao repositório privado)",
                         input = gh.token or "",
                         text_type = "password",
                         buttons = { {
