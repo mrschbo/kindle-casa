@@ -83,7 +83,7 @@ function View:apply(res)
         return
     end
     if res.action == "refresh_all" then
-        for _, e in ipairs(self.dash:allInstances()) do e.inst.last_update = 0 end
+        self:invalidateAll()
         self:scheduleTick(0.2)
     end
     if res.expanded or res.page_changed then
@@ -120,6 +120,17 @@ function View:paintTo(bb, x, y)
 end
 
 ----------------------------------------------------------------- timer
+-- Mark every widget stale. Casa has its own throttles for remote data,
+-- so reset those too; otherwise "Refresh everything" could reuse old data.
+function View:invalidateAll()
+    for _, entry in ipairs(self.dash:allInstances()) do
+        local inst = entry.inst
+        inst.last_update = 0
+        if inst.last_panel_sync ~= nil then inst.last_panel_sync = 0 end
+        if inst.last_weather_update ~= nil then inst.last_weather_update = 0 end
+    end
+end
+
 function View:scheduleTick(seconds)
     UIManager:unschedule(self.tick_fn)
     UIManager:scheduleIn(seconds, self.tick_fn)
@@ -207,6 +218,7 @@ end
 function View:onResume()
     if self.closed then return end
     self.last_minute = 0
+    self:invalidateAll()
     self:scheduleTick(1)
     UIManager:setDirty(self, function() return "full", self.dimen end)
 end
