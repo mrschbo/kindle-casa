@@ -9,7 +9,7 @@ local F = require("kindlecasa/i18n").f
 local Core = {}
 Core.__index = Core
 
-Core.VERSION = "0.1.0"
+Core.VERSION = "0.2.0"
 
 Core.WIDGET_TYPES = {
     "clock", "weather", "calendar", "news", "reminders", "lastfm",
