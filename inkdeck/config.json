@@ -1,0 +1,14 @@
+{
+  "pages": [
+    {
+      "widgets": [
+        {"type": "weather", "x": 0, "y": 0, "w": 2, "h": 1, "location": "Joinville, SC, Brasil"},
+        {"type": "catbars", "x": 0, "y": 1, "w": 1, "h": 1, "title": "Areia", "key": "sand", "days": 5, "url": "https://mrschbo.github.io/kindle-casa/cats.json"},
+        {"type": "catbars", "x": 1, "y": 1, "w": 1, "h": 1, "title": "Ração", "key": "food", "days": 45, "url": "https://mrschbo.github.io/kindle-casa/cats.json"},
+        {"type": "reminders", "x": 0, "y": 2, "w": 2, "h": 1},
+        {"type": "note", "x": 0, "y": 3, "w": 2, "h": 1, "url": "https://mrschbo.github.io/kindle-casa/cats.json", "key": "note"}
+      ]
+    }
+  ],
+  "refresh_interval": 3600
+}   
