@@ -1,4 +1,4 @@
--- Note / quote: static text, or a random line from notes.txt in the InkDeck folder
+-- Note / quote: static text, or a random line from notes.txt in the Kindle Casa folder
 local Base = require("kindlecasa/widgets/base")
 local UI = require("kindlecasa/ui")
 local U = require("kindlecasa/util")
