@@ -225,7 +225,7 @@ function InkDeck:addToMainMenu(menu_items)
                     dialog = InputDialog:new{
                         title = "Token GitHub (somente leitura)",
                         input = gh.token or "",
-                        input_type = "password",
+                        text_type = "password",
                         buttons = { {
                             { text = T("Cancel"), id = "close", callback = function() UIManager:close(dialog) end },
                             { text = T("Save"), is_enter_default = true, callback = function()
