@@ -1,13 +1,13 @@
-Writing an InkDeck widget
-A widget is one Lua file in `inkdeck.koplugin/inkdeck/widgets/`. It draws itself with a small canvas API and,
+Writing an Kindle Casa widget
+A widget is one Lua file in `kindlecasa.koplugin/kindlecasa/widgets/`. It draws itself with a small canvas API and,
 optionally, fetches data and reacts to keys in its full-screen view. The same code runs on the device and in the
 PC preview (`tools/preview.py`), so you can iterate without touching a Kindle.
 1. Minimal widget
 ```lua
--- inkdeck.koplugin/inkdeck/widgets/hello.lua
-local Base = require("inkdeck/widgets/base")
-local UI = require("inkdeck/ui")
-local T = require("inkdeck/i18n").t
+-- kindlecasa.koplugin/kindlecasa/widgets/hello.lua
+local Base = require("kindlecasa/widgets/base")
+local UI = require("kindlecasa/ui")
+local T = require("kindlecasa/i18n").t
 
 local Hello = Base.define{
     type = "hello",            -- must match the file name
@@ -26,7 +26,7 @@ end
 return Hello
 ```
 Then register it:
-add `"hello"` to `Core.WIDGET_TYPES` in `inkdeck/core.lua`
+add `"hello"` to `Core.WIDGET_TYPES` in `kindlecasa/core.lua`
 add `hello: { name: "Hello" }` to `TYPES` in `editor/index.html` (and a settings form in `settingsForm()` if needed)
 Settings from the editor arrive in `self.s` (merged with `defaults`).
 2. Fetching data
@@ -50,7 +50,7 @@ Available helpers on `self.ctx`:
 `net.getJson(url, headers, timeout)`	decoded table or `nil, err`
 `net.request(method, url, body, headers, timeout)`	for POST/PUT
 `net.download(url, path, headers)`	save to a file (e.g. into `ctx.cache_dir`)
-`data_dir`, `cache_dir`	the `inkdeck/` folder on the device and its cache
+`data_dir`, `cache_dir`	the `kindlecasa/` folder on the device and its cache
 `config`	the whole config (e.g. `config.homeassistant`)
 `input(title, default, callback)`	on-screen keyboard
 `demo`	true in the preview tool – return demo data so screenshots look nice
@@ -69,7 +69,7 @@ function Hello:key(k)
     return false
 end
 ```
-If you don't define `drawFull`, the tile content is drawn big. `Back` and the page keys are handled by InkDeck
+If you don't define `drawFull`, the tile content is drawn big. `Back` and the page keys are handled by Kindle Casa
 (optionally define `:back()` returning true to consume Back first, e.g. to leave a sub-view).
 Other optional hooks: `:tileRight()` (small text on the right of the tile header), `:fullInterval()` (faster updates
 while open), `tick_minute = true` (repaint every minute, like the clock).
@@ -87,11 +87,11 @@ Coordinates are pixels; colors are `"black" "dark" "gray" "mid" "light" "white"`
 `c:icon(codepoint, x, y, size, o)`	Nerd Font icon (weather, Font Awesome, …)
 `c:image(path, x, y, w, h, {fill=true})`	JPG/PNG, fitted or cropped to fill
 `c:invert(x, y, w, h)`	invert a region
-Shared building blocks in `inkdeck/ui.lua`: `UI.tile`, `UI.fullFrame`, `UI.row` (list rows with icon/checkbox/selection),
+Shared building blocks in `kindlecasa/ui.lua`: `UI.tile`, `UI.fullFrame`, `UI.row` (list rows with icon/checkbox/selection),
 `UI.progress`, `UI.message`, `UI.fit` (largest font size that fits).
 5. Translations
 Wrap user-visible strings in `T("…")` (or `F("…%d…", n)` for formats) and add the German text to
-`inkdeck/i18n.lua`. `python3 tools/test_util.py` fails if a translation is missing. New languages: add a table to
+`kindlecasa/i18n.lua`. `python3 tools/test_util.py` fails if a translation is missing. New languages: add a table to
 `TRANSLATIONS` and day/month names to `NAMES`.
 6. Preview and test
 ```bash
