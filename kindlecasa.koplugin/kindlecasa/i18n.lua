@@ -28,12 +28,12 @@ local NAMES = {
 
 local TRANSLATIONS = {
     pt = {
-        ["Open InkDeck"] = "Abrir painel", ["Open when KOReader starts"] = "Abrir ao iniciar o KOReader",
+        ["Open Painel da Casa"] = "Abrir painel", ["Open when KOReader starts"] = "Abrir ao iniciar o KOReader",
         ["About & folders"] = "Sobre e pastas",
         ["About & folders"] = "Sobre e pastas", ["Landscape"] = "Paisagem", ["Portrait"] = "Retrato",
         ["Refresh everything"] = "Atualizar tudo", ["Reload configuration"] = "Recarregar configuração",
         ["Hide selection frame"] = "Ocultar seleção", ["Show selection frame"] = "Mostrar seleção",
-        ["Exit InkDeck"] = "Sair do painel", ["Cancel"] = "Cancelar", ["Save"] = "Salvar",
+        ["Exit Painel da Casa"] = "Sair do painel", ["Cancel"] = "Cancelar", ["Save"] = "Salvar",
         ["Today"] = "Hoje", ["Tomorrow"] = "Amanhã", ["Weather"] = "Clima", ["Countdown"] = "Contagem regressiva",
         ["Widget error:"] = "Erro no widget:", ["Loading weather …"] = "Carregando clima …",
         ["Controles: toque no menu para sair; o painel não abre widgets em tela cheia."] = "Controles: toque no menu para sair; o painel não abre widgets em tela cheia.",
@@ -86,20 +86,20 @@ local TRANSLATIONS = {
         ["Cancel"] = "Abbrechen",
         ["Choose a media_player entity in the editor."] = "Im Editor eine media_player-Entität wählen.",
         ["Configuration:"] = "Konfiguration:",
-        ["Controls: the d-pad moves the selection, OK opens a widget, the page keys switch pages, the Menu key opens the InkDeck menu."] =
-            "Bedienung: Steuerkreuz bewegt die Auswahl, Mitte öffnet ein Widget, Blättern-Tasten wechseln die Seite, Menü-Taste öffnet das InkDeck-Menü.",
+        ["Controls: the d-pad moves the selection, OK opens a widget, the page keys switch pages, the Menu key opens the Painel da Casa menu."] =
+            "Bedienung: Steuerkreuz bewegt die Auswahl, Mitte öffnet ein Widget, Blättern-Tasten wechseln die Seite, Menü-Taste öffnet das Painel da Casa-Menü.",
         ["Date missing (YYYY-MM-DD)"] = "Datum fehlt (JJJJ-MM-TT)",
         ["Empty"] = "Leer",
         ["Error: "] = "Fehler: ",
-        ["Exit InkDeck"] = "InkDeck beenden",
+        ["Exit Painel da Casa"] = "Painel da Casa beenden",
         ["Feels %s  ·  %s / %s"] = "Gefühlt %s  ·  %s / %s",
         ["Feels like %s"] = "Gefühlt %s",
         ["Hide selection frame"] = "Auswahlrahmen ausblenden",
         ["High %s  ·  Low %s"] = "Max %s  ·  Min %s",
         ["Home Assistant not set up.\nAdd URL and token in the editor."] = "Home Assistant nicht eingerichtet.\nURL und Token im Editor eintragen.",
         ["Home Assistant unreachable"] = "Home Assistant nicht erreichbar",
-        ["Painel da Casa"] = "InkDeck Dashboard",
-        ["InkDeck: config.json is invalid and was ignored."] = "InkDeck: config.json ist fehlerhaft und wird ignoriert.",
+        ["Painel da Casa"] = "Painel da Casa Dashboard",
+        ["Painel da Casa: config.json is invalid and was ignored."] = "Painel da Casa: config.json ist fehlerhaft und wird ignoriert.",
         ["Landscape"] = "Querformat",
         ["Last played %s"] = "Zuletzt gehört %s",
         ["Last.fm unavailable"] = "Last.fm nicht erreichbar",
@@ -122,7 +122,7 @@ local TRANSLATIONS = {
         ["Now playing"] = "Läuft gerade",
         ["OK: play/pause   ·   ◀ ▶ track   ·   ▲ ▼ volume   ·   Back: close"] =
             "Mitte: Play/Pause   ·   ◀ ▶ Titel   ·   ▲ ▼ Lautstärke   ·   Zurück: schließen",
-        ["Open InkDeck"] = "InkDeck öffnen",
+        ["Open Painel da Casa"] = "Painel da Casa öffnen",
         ["Open when KOReader starts"] = "Beim Start von KOReader öffnen",
         ["PHOTO FRAME"] = "BILDERRAHMEN",
         ["Page %d"] = "Seite %d",
@@ -134,8 +134,8 @@ local TRANSLATIONS = {
         ["Save"] = "Speichern",
         ["Show selection frame"] = "Auswahlrahmen zeigen",
         ["Shows your latest Last.fm scrobble   ·   Back: close"] = "Zeigt deinen letzten Last.fm-Scrobble   ·   Zurück: schließen",
-        ["Spotify needs the optional InkDeck bridge.\nSet the bridge address in the editor – or use the Last.fm widget instead."] =
-            "Spotify braucht die optionale InkDeck-Bridge.\nBridge-Adresse im Editor eintragen – oder stattdessen das Last.fm-Widget nutzen.",
+        ["Spotify needs the optional Painel da Casa bridge.\nSet the bridge address in the editor – or use the Last.fm widget instead."] =
+            "Spotify braucht die optionale Painel da Casa-Bridge.\nBridge-Adresse im Editor eintragen – oder stattdessen das Last.fm-Widget nutzen.",
         ["Sun %s – %s"] = "Sonne %s – %s",
         ["This page is empty.\nAdd widgets in the editor and copy config.json to your device."] =
             "Diese Seite ist leer.\nWidgets im Editor hinzufügen und config.json aufs Gerät kopieren.",
