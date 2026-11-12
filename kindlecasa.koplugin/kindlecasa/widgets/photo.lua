@@ -1,4 +1,4 @@
--- Photo frame: shows images from the "photos" folder in the InkDeck directory
+-- Photo frame: shows images from the "photos" folder in the Kindle Casa directory
 local Base = require("kindlecasa/widgets/base")
 local UI = require("kindlecasa/ui")
 local U = require("kindlecasa/util")
