@@ -50,12 +50,12 @@ small.note{display:block;color:var(--muted);margin-top:8px}
 
 <section>
 <h2>Gatos</h2>
-<p class="muted">Informe o peso do pacote, quando abriu e a duração estimada. O painel calcula o consumo e o percentual restante.</p>
+<p class="muted">Informe o peso do pacote, quando abriu e a duração estimada. O painel calcula o período estimado. Se o pacote durar mais que o previsto, aumente a duração total (por exemplo, de 45 para 50 dias); a data de abertura permanece igual.</p>
 <div class="grid">
 <div><h3>Areia</h3>
 <div class="field"><label for="litterOpened">Data em que abriu</label><input id="litterOpened" type="date"></div>
 <div class="field"><label for="litterWeight">Quantidade (kg)</label><input id="litterWeight" type="number" min="0" step="0.1" value="10.5"></div>
-<div class="field"><label for="litterDays">Duração estimada (dias)</label><input id="litterDays" type="number" min="1" step="1" value="45"></div>
+<div class="field"><label for="litterDays">Duração estimada total (dias)</label><input id="litterDays" type="number" min="1" step="1" value="45"></div>
 </div>
 <div><h3>Ração</h3>
 <div class="field"><label for="foodOpened">Data em que abriu</label><input id="foodOpened" type="date"></div>
@@ -87,14 +87,14 @@ const OWNER='mrschbo', REPO='kindle-casa-dados', PATH='painel.json';
 const $=id=>document.getElementById(id);
 let tasks=[], bills=[];
 function status(msg,kind=''){const el=$('status');el.textContent=msg;el.className='status '+kind}
-function addItem(which,data={}){const arr=which==='tasks'?tasks:bills;arr.push({title:data.title||'',date:data.date||'',done:!!data.done,note:data.note||''});renderItems(which)}
+function addItem(which,data={}){const arr=which==='tasks'?tasks:bills;arr.push({title:data.title||data.text||data.name||'',date:data.date||'',done:!!(data.done||data.paid),value:data.value||data.note||''});renderItems(which)}
 function removeItem(which,i){(which==='tasks'?tasks:bills).splice(i,1);renderItems(which)}
 function renderItems(which){const arr=which==='tasks'?tasks:bills,root=$(which);root.innerHTML='';
 arr.forEach((it,i)=>{const d=document.createElement('div');d.className='item';
 d.innerHTML=`<div class="item-head"><strong>${which==='tasks'?'Tarefa':'Conta'} ${i+1}</strong><button type="button" class="danger" data-remove="${i}">Remover</button></div>
 <div class="grid"><div class="field"><label>Descrição</label><input data-k="title" value="${esc(it.title)}" placeholder="${which==='tasks'?'Ex.: limpar filtro':'Ex.: Energia'}"></div>
 <div class="field"><label>${which==='tasks'?'Prazo':'Vencimento'}</label><input data-k="date" type="date" value="${esc(it.date)}"></div></div>
-${which==='tasks'?`<label style="margin-top:9px"><input data-k="done" type="checkbox" ${it.done?'checked':''} style="width:auto;margin-right:7px">Concluída</label>`:`<div class="field" style="margin-top:9px"><label>Observação / valor</label><input data-k="note" value="${esc(it.note)}" placeholder="Opcional"></div>`}`;
+${which==='tasks'?'<label style="margin-top:9px"><input data-k="done" type="checkbox" '+(it.done?'checked':'')+' style="width:auto;margin-right:7px">Concluída</label>':'<div class="field" style="margin-top:9px"><label>Valor</label><input data-k="value" value="'+esc(it.value)+'" placeholder="Ex.: R$ 180,00"></div><label style="margin-top:9px"><input data-k="done" type="checkbox" '+(it.done?'checked':'')+' style="width:auto;margin-right:7px">Paga</label>'}`;
 d.querySelector('[data-remove]').onclick=()=>removeItem(which,i);
 d.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('input',()=>{it[el.dataset.k]=el.type==='checkbox'?el.checked:el.value}));
 root.appendChild(d)});
@@ -103,15 +103,15 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function collect(){return {version:1,updatedAt:new Date().toISOString(),house:{note:$('houseNote').value},
 cats:{litter:{openedAt:$('litterOpened').value,weightKg:num('litterWeight'),estimatedDays:num('litterDays')},
 food:{openedAt:$('foodOpened').value,weightKg:num('foodWeight'),estimatedDays:num('foodDays')}},
-tasks,bills,cycles:{K:{date:$('cycleK').value,note:$('cycleKNote').value},E:{date:$('cycleE').value,note:$('cycleENote').value}}}}
+tasks:tasks.map(it=>({text:it.title,date:it.date,done:!!it.done})),bills:bills.map(it=>({name:it.title,date:it.date,value:it.value||'',paid:!!it.done})),cycles:{K:{date:$('cycleK').value,note:$('cycleKNote').value},E:{date:$('cycleE').value,note:$('cycleENote').value}}}}
 function num(id){const v=parseFloat($(id).value);return Number.isFinite(v)?v:0}
 function fill(d){$('houseNote').value=d.house?.note||'';
 $('litterOpened').value=d.cats?.litter?.openedAt||'';$('litterWeight').value=d.cats?.litter?.weightKg??10.5;$('litterDays').value=d.cats?.litter?.estimatedDays??45;
 $('foodOpened').value=d.cats?.food?.openedAt||'';$('foodWeight').value=d.cats?.food?.weightKg??10;$('foodDays').value=d.cats?.food?.estimatedDays??40;
 $('cycleK').value=d.cycles?.K?.date||'';$('cycleKNote').value=d.cycles?.K?.note||'';
 $('cycleE').value=d.cycles?.E?.date||'';$('cycleENote').value=d.cycles?.E?.note||'';
-tasks=Array.isArray(d.tasks)?d.tasks:[];bills=Array.isArray(d.bills)?d.bills:[];renderItems('tasks');renderItems('bills');preview()}
-function previewOne(label,date,days){if(!date||!days)return `${label}: informe data e duração.`;const start=new Date(date+'T12:00:00'),now=new Date();now.setHours(12,0,0,0);const elapsed=Math.floor((now-start)/86400000),left=days-elapsed,pct=Math.max(0,Math.min(100,left/days*100));return `${label}: ${left} dias estimados restantes · ${Math.round(pct)}% do período restante.`}
+tasks=Array.isArray(d.tasks)?d.tasks.map(it=>({title:it.title||it.text||it.name||'',date:it.date||'',done:!!it.done,value:''})):[];bills=Array.isArray(d.bills)?d.bills.map(it=>({title:it.title||it.name||it.text||'',date:it.date||'',done:!!(it.paid||it.done),value:it.value||it.note||''})):[];renderItems('tasks');renderItems('bills');preview()}
+function previewOne(label,date,days){if(!date||!days)return `${label}: informe data e duração.`;const start=new Date(date+'T12:00:00'),now=new Date();now.setHours(12,0,0,0);const elapsed=Math.floor((now-start)/86400000),left=days-elapsed,pct=Math.max(0,Math.min(100,left/days*100));return left>=0?`${label}: ${left} dias estimados restantes · ${Math.round(pct)}% do período restante.`:`${label}: estimativa ultrapassada há ${Math.abs(left)} dias · aumente a duração total se ainda houver produto.`}
 function preview(){$('preview').textContent=[previewOne('Areia',$('litterOpened').value,num('litterDays')),previewOne('Ração',$('foodOpened').value,num('foodDays'))].join('\n')}
 document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',preview));
 function headers(){const t=$('token').value.trim();if(!t)throw Error('Cole seu token antes de continuar.');return {'Accept':'application/vnd.github+json','Authorization':'Bearer '+t,'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'}}
