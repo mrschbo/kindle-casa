@@ -34,7 +34,6 @@ function Core.defaultConfig(lang)
         full_refresh_every = 12,
         keep_awake = true,
         dashboard_mode = "casa",
-        homeassistant = { url = "", token = "" },
         github = { owner = "mrschbo", repo = "kindle-casa-dados", path = "painel.json", token = "", refresh_minutes = 15 },
         grid = { portrait = { cols = 1, rows = 1 }, landscape = { cols = 1, rows = 1 } },
         pages = {
