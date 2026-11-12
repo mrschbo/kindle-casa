@@ -1,7 +1,7 @@
 --[[--
-KindleCasa – a home dashboard for e-ink devices, running inside KOReader.
+Painel da Casa – painel doméstico para Kindle com KOReader.
 
-Menu: Tools → KindleCasa. Configuration lives in the "kindle-casa" folder
+Menu: Ferramentas → Painel da Casa. Configuration lives in the "kindle-casa" folder
 (on a Kindle: the USB drive root, i.e. /mnt/us/kindle-casa/config.json).
 
 @module koplugin.KindleCasa
