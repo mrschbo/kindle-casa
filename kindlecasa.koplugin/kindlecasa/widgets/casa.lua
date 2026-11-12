@@ -37,8 +37,42 @@ end
 function Casa:init()
     self.weather = Weather.new({ city = self.s.city, lat = self.s.lat, lon = self.s.lon }, self.ctx)
     self.last_weather_update = 0
+    self.last_panel_sync = 0
+    self.panel_cache_path = self.ctx.cache_dir .. "/painel.json"
+    local cached = U.loadJson(self.panel_cache_path)
+    if type(cached) == "table" then
+        self:applyPanel(cached)
+    end
 end
+
+function Casa:applyPanel(panel)
+    local GitHub = require("kindlecasa/github")
+    local mapped = GitHub.toCasaSettings(panel, self.s)
+    self.s.sand, self.s.food = mapped.sand, mapped.food
+    self.s.tasks, self.s.bills = mapped.tasks, mapped.bills
+    self.s.cycles = mapped.cycles
+    self.s.house = mapped.house
+    self.panel_updated_at = mapped.updatedAt
+end
+
+function Casa:syncPanel(now)
+    if not self.ctx.fetchCasaData then return end
+    local interval = tonumber(self.ctx.config.github and self.ctx.config.github.refresh_minutes) or 15
+    interval = math.max(5, interval) * 60
+    if now - (self.last_panel_sync or 0) < interval then return end
+    self.last_panel_sync = now
+    local ok, panel, err = pcall(self.ctx.fetchCasaData)
+    if ok and type(panel) == "table" then
+        self:applyPanel(panel)
+        pcall(U.saveJson, self.panel_cache_path, panel)
+        self.panel_sync_error = nil
+    else
+        self.panel_sync_error = ok and tostring(err or "Falha ao buscar painel") or tostring(panel)
+    end
+end
+
 function Casa:update(now)
+    self:syncPanel(now)
     if not self.weather.data or now - (self.last_weather_update or 0) >= 1800 then
         local ok, err = pcall(self.weather.update, self.weather, now)
         self.last_weather_update = now
