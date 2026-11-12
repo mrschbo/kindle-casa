@@ -1,4 +1,4 @@
--- InkDeck core: pages, layout, focus navigation, expanded view, menu.
+-- Painel da Casa core: pages, layout, focus navigation, expanded view, menu.
 -- Independent of KOReader so it can run in the PC preview tool.
 local Layout = require("kindlecasa/layout")
 local UI = require("kindlecasa/ui")
@@ -190,7 +190,7 @@ function Core:openMenu()
         { label = T("Refresh everything"), action = "refresh_all", icon = UI.ICON.refresh },
         { label = T("Reload configuration"), action = "reload", icon = UI.ICON.cog },
         { label = self.focus_visible and T("Hide selection frame") or T("Show selection frame"), action = "toggle_focus", icon = UI.ICON.box },
-        { label = T("Exit InkDeck"), action = "close", icon = UI.ICON.power },
+        { label = T("Exit Painel da Casa"), action = "close", icon = UI.ICON.power },
     }
     self.menu = { items = items, sel = 1 }
 end
@@ -264,7 +264,7 @@ function Core:key(k)
     end
 
     -- dashboard: Back never exits (wall display!) – it jumps to the first page and hides the frame.
-    -- Leave InkDeck via Menu → "Exit InkDeck" or the Home key.
+    -- Leave Painel da Casa via Menu → "Exit Painel da Casa" or the Home key.
     if k == "Back" then
         local changed = self.page_idx ~= 1 or self.focus_visible
         self.page_idx = 1
