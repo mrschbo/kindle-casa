@@ -14,7 +14,7 @@ local function request(method, url, body, headers, timeout)
         headers["Content-Length"] = tostring(#body)
         headers["Content-Type"] = headers["Content-Type"] or "application/json"
     end
-    headers["User-Agent"] = headers["User-Agent"] or "InkDeck/0.1 (KOReader)"
+    headers["User-Agent"] = headers["User-Agent"] or "KindleCasa/0.2 (KOReader)"
     if ok_su then socketutil:set_timeout(timeout or 10, (timeout or 10) * 3) end
     local ok, code, resp_headers, status = pcall(function()
         return socket.skip(1, http.request{
