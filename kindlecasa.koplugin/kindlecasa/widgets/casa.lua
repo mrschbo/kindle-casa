@@ -200,7 +200,7 @@ function Casa:drawTile(c, p, focused)
     section(c, x, agenda_y, w, "Agenda", 0xF073)
     local event_y = agenda_y + 48
     if #events == 0 then
-        text(c, "Sem eventos nos próximos dias", x + 4, event_y, 24, { color = "gray" })
+        text(c, agenda.syncedAt and "Sem eventos nos próximos dias" or "Agenda ainda não sincronizada", x + 4, event_y, 24, { color = "gray" })
     else
         local shown = math.min(#events, 4)
         for i = 1, shown do
