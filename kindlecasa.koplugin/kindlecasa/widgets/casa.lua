@@ -106,9 +106,7 @@ function Casa:drawTile(c, p, focused)
         { id = "cycles", size = layout.cycles or "compact" },
         { id = "agenda", size = layout.agenda or "wide" },
     }
-    if self.s.house and tostring(self.s.house.note or "") ~= "" then
-        blocks[#blocks + 1] = { id = "note", size = layout.note or "compact" }
-    end
+    blocks[#blocks + 1] = { id = "note", size = layout.note or "compact" }
 
     -- Two-column packing, matching the editor's compact / wide / tall controls.
     local occupied, placements, row_count = {}, {}, 0
@@ -241,7 +239,7 @@ function Casa:drawTile(c, p, focused)
             local function cycle_line(label, cycle, offset)
                 cycle = cycle or {}
                 local d = days_until(cycle.date)
-                local value = cycle.note ~= "" and (cycle.note or "") or (d and (d == 0 and "Hoje" or (d > 0 and (d .. " " .. day_word(d)) or ("há " .. math.abs(d) .. " " .. day_word(d)))) or "Sem data")
+                local value = cycle.note and cycle.note ~= "" and cycle.note or (d and (d == 0 and "Hoje" or (d > 0 and (d .. " " .. day_word(d)) or ("há " .. math.abs(d) .. " " .. day_word(d)))) or "Sem data")
                 text(c, label, xx + 2, body_y + offset, 22, { bold = true })
                 text(c, value, xx + 48, body_y + offset, 20, { maxw = ww - 55 })
                 if item.cw == 2 then text(c, fmt_date(cycle.date), xx + ww - 100, body_y + offset, 18, { align = "right", maxw = 100 }) end
@@ -267,7 +265,7 @@ function Casa:drawTile(c, p, focused)
 
         elseif item.id == "note" then
             local note = tostring((self.s.house and self.s.house.note) or "")
-            text(c, note, xx + 2, body_y + 2, 22, { maxw = ww - 4 })
+            text(c, note ~= "" and note or "Sem anotação", xx + 2, body_y + 2, 22, { color = note ~= "" and "black" or "gray", maxw = ww - 4 })
         end
     end
 end
