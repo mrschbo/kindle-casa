@@ -95,6 +95,8 @@ small.note{display:block;color:var(--muted);margin-top:8px}
 const OWNER='mrschbo', REPO='kindle-casa-dados', PATH='painel.json';
 const $=id=>document.getElementById(id);
 let tasks=[], bills=[], calendarData={calendars:[],selectedIds:[],events:[],syncedAt:null}, googleToken=null, googleTokenClient=null, availableCalendars=[];
+$('googleClientId').value=localStorage.getItem('kindlecasa_google_client_id')||'';
+$('googleClientId').addEventListener('change',()=>localStorage.setItem('kindlecasa_google_client_id',$('googleClientId').value.trim()));
 function status(msg,kind=''){const el=$('status');el.textContent=msg;el.className='status '+kind}
 function addItem(which,data={}){const arr=which==='tasks'?tasks:bills;arr.push({title:data.title||data.text||data.name||'',date:data.date||'',done:!!(data.done||data.paid),value:data.value||data.note||''});renderItems(which)}
 function removeItem(which,i){(which==='tasks'?tasks:bills).splice(i,1);renderItems(which)}
