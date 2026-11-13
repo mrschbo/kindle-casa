@@ -1,3 +1,9 @@
+## Em desenvolvimento — integração Google Agenda
+- Editor web com autorização Google somente leitura.
+- Sincronização das agendas principal e Família para `painel.json` privado.
+- Exibição dos próximos eventos no painel do Kindle.
+- Correção de singular/plural na contagem de dias.
+
 # Changelog
 
 ## 0.2.1 — revisão para teste

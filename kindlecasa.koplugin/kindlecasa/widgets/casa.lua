@@ -21,6 +21,16 @@ local function days_until(iso)
     return math.floor((U.dayStart(target) - U.dayStart(U.now())) / 86400 + 0.5), target
 end
 local function clamp(n, lo, hi) return math.max(lo, math.min(hi, n)) end
+local function day_word(n) return math.abs(n) == 1 and "dia" or "dias" end
+local function event_stamp(value, all_day)
+    value = tostring(value or "")
+    local y, m, d, hh, mm = value:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d)")
+    if not y then y, m, d = value:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)") end
+    if not y then return value end
+    local date = d .. "/" .. m
+    if all_day or not hh then return date end
+    return date .. " " .. hh .. ":" .. mm
+end
 local function fmt_date(iso)
     local y,m,d = tostring(iso or ""):match("^(%d%d%d%d)%-(%d%d)%-(%d%d)$")
     if not y then return "—" end
@@ -30,8 +40,8 @@ local function text(c, s, x, y, size, opts)
     opts = opts or {}; c:text(tostring(s or ""), x, y, { size = size, bold = opts.bold, color = opts.color or "black", maxw = opts.maxw, w = opts.w, align = opts.align })
 end
 local function section(c, x, y, w, title, icon)
-    if icon then c:icon(icon, x, y + 1, 25, { color = "black" }) end
-    text(c, title, x + (icon and 36 or 0), y, 28, { bold = true })
+    if icon then c:icon(icon, x, y + 1, 28, { color = "black" }) end
+    text(c, title, x + (icon and 36 or 0), y, 32, { bold = true })
     c:hline(x, y + 37, w, 2, "black")
 end
 function Casa:init()
@@ -52,6 +62,7 @@ function Casa:applyPanel(panel)
     self.s.tasks, self.s.bills = mapped.tasks, mapped.bills
     self.s.cycles = mapped.cycles
     self.s.house = mapped.house
+    self.s.calendar = mapped.calendar
     self.panel_updated_at = mapped.updatedAt
 end
 
@@ -90,12 +101,12 @@ function Casa:drawTile(c, p, focused)
     local cur = self.weather.data and self.weather.data.current or {}
     local temp = type(cur.temperature_2m) == "number" and (math.floor(cur.temperature_2m + 0.5) .. "°") or "—°"
     text(c, temp, wx, y + 10, math.min(100, math.floor(top_h * 0.48)), { bold = true })
-    text(c, self.s.city or "Joinville", wx + 4, y + math.floor(top_h * 0.62), 22, { bold = true })
+    text(c, self.s.city or "Joinville", wx + 4, y + math.floor(top_h * 0.62), 26, { bold = true })
     if self.weather.data then
         local code = cur.weather_code
         local WeatherModule = require("kindlecasa/widgets/weather")
         local desc = WeatherModule.code(code, cur.is_day ~= 0)
-        text(c, desc, wx + 4, y + math.floor(top_h * 0.78), 17, { color = "dark" })
+        text(c, desc, wx + 4, y + math.floor(top_h * 0.78), 21, { color = "dark" })
     else
         text(c, "Clima", wx + 4, y + math.floor(top_h * 0.78), 17, { color = "dark" })
     end
@@ -112,13 +123,13 @@ function Casa:drawTile(c, p, focused)
     local function consumable(cx, item, fallback)
         item = item or fallback
         local d = days_until(item.date)
-        text(c, item.label or "", cx, block_y, 28, { bold = true })
-        text(c, d and (d == 0 and "Hoje" or (d < 0 and ("há " .. math.abs(d) .. " dias") or (math.abs(d) .. " dias"))) or fmt_date(item.date), cx, block_y + 36, 40, { bold = true })
-        text(c, d and (d > 0 and "até repor" or (d < 0 and "estimativa ultrapassada" or "repor hoje")) or "previsão", cx, block_y + 78, 20, { color = "dark" })
+        text(c, item.label or "", cx, block_y, 32, { bold = true })
+        text(c, d and (d == 0 and "Hoje" or (d < 0 and ("há " .. math.abs(d) .. " " .. day_word(d)) or (math.abs(d) .. " " .. day_word(d)))) or fmt_date(item.date), cx, block_y + 40, 44, { bold = true })
+        text(c, d and (d > 0 and "até repor" or (d < 0 and "estimativa ultrapassada" or "repor hoje")) or "previsão", cx, block_y + 84, 24, { color = "dark" })
         local total = tonumber(item.total_days) or 0
         local pct = total > 0 and clamp(math.floor((d or 0) / total * 100 + 0.5), 0, 100) or 0
-        UI.progress(c, cx, block_y + 112, half - 18, 18, pct / 100, { border = 2 })
-        text(c, pct .. "% restante", cx, block_y + 140, 21, { bold = true })
+        UI.progress(c, cx, block_y + 118, half - 18, 20, pct / 100, { border = 2 })
+        text(c, pct .. "% restante", cx, block_y + 148, 25, { bold = true })
     end
     consumable(x, self.s.sand, { label = "Areia", date = "", total_days = 0 })
     c:vline(x + half + 14, block_y - 2, 166, 1, "gray")
@@ -143,13 +154,13 @@ function Casa:drawTile(c, p, focused)
                 c:icon(icon, xx, row_y + shown * 48 + 2, 19, { color = "black" })
                 local value = bills and (it.value or "") or ""
                 local right = value ~= "" and tostring(value) or nil
-                text(c, label, xx + 28, row_y + shown * 48, 22, { color = done and "gray" or "black", maxw = width - 36 - (right and 72 or 0) })
-                if right then text(c, right, xx + width - 76, row_y + shown * 48, 20, { bold = true, maxw = 76, align = "right" }) end
-                if done then c:hline(xx + 28, row_y + shown * 48 + 11, math.min(width - 40, c:measure(label, { size = 22 })), 1, "gray") end
+                text(c, label, xx + 28, row_y + shown * 48, 26, { color = done and "gray" or "black", maxw = width - 36 - (right and 72 or 0) })
+                if right then text(c, right, xx + width - 76, row_y + shown * 48, 24, { bold = true, maxw = 76, align = "right" }) end
+                if done then c:hline(xx + 28, row_y + shown * 48 + 11, math.min(width - 40, c:measure(label, { size = 26 })), 1, "gray") end
                 shown = shown + 1
             end
         end
-        if shown == 0 then text(c, bills and "Sem contas anotadas" or "Sem tarefas anotadas", xx, row_y, 20, { color = "gray" }) end
+        if shown == 0 then text(c, bills and "Sem contas anotadas" or "Sem tarefas anotadas", xx, row_y, 24, { color = "gray" }) end
     end
     draw_items(self.s.tasks, x, colw, false)
     c:vline(x + colw + 15, lists_y + 4, 280, 1, "gray")
@@ -165,18 +176,39 @@ function Casa:drawTile(c, p, focused)
         item = item or {}
         local d = days_until(item.date)
         text(c, label, x + 4, yy, 26, { bold = true })
-        text(c, item.note ~= "" and (item.note or "") or (d and (d == 0 and "Hoje" or (d > 0 and (d .. " dias") or ("há " .. math.abs(d) .. " dias"))) or "Sem data"), x + 72, yy, 23, { maxw = w - 210 })
-        text(c, fmt_date(item.date), x + w - 132, yy, 21, { bold = true, align = "right", maxw = 132 })
+        text(c, item.note ~= "" and (item.note or "") or (d and (d == 0 and "Hoje" or (d > 0 and (d .. " " .. day_word(d)) or ("há " .. math.abs(d) .. " " .. day_word(d)))) or "Sem data"), x + 72, yy, 27, { maxw = w - 210 })
+        text(c, fmt_date(item.date), x + w - 132, yy, 25, { bold = true, align = "right", maxw = 132 })
     end
     cycle_line("K.", self.s.cycles and self.s.cycles.K, line_y)
     cycle_line("E.", self.s.cycles and self.s.cycles.E, line_y + 44)
 
     local house_note = self.s.house and self.s.house.note
+    local content_end = line_y + 88
     if house_note and tostring(house_note) ~= "" then
-        local note_y = line_y + 92
+        local note_y = content_end + 8
         c:hline(x, note_y - 12, w, 1, "gray")
-        text(c, "ANOTAÇÃO", x + 4, note_y, 19, { bold = true, color = "dark" })
-        text(c, tostring(house_note), x + 4, note_y + 24, 22, { maxw = w - 8 })
+        text(c, "ANOTAÇÃO", x + 4, note_y, 23, { bold = true, color = "dark" })
+        text(c, tostring(house_note), x + 4, note_y + 26, 26, { maxw = w - 8 })
+        content_end = note_y + 66
+    end
+
+    -- Google Calendar: events are synchronized by the web editor and cached in painel.json.
+    local agenda = self.s.calendar or {}
+    local events = type(agenda.events) == "table" and agenda.events or {}
+    local agenda_y = content_end + 8
+    c:hline(x, agenda_y - 10, w, 1, "gray")
+    section(c, x, agenda_y, w, "Agenda", 0xF073)
+    local event_y = agenda_y + 48
+    if #events == 0 then
+        text(c, agenda.syncedAt and "Sem eventos nos próximos dias" or "Agenda ainda não sincronizada", x + 4, event_y, 24, { color = "gray" })
+    else
+        local shown = math.min(#events, 4)
+        for i = 1, shown do
+            local ev = events[i]
+            local stamp = event_stamp(ev.start, ev.allDay)
+            text(c, stamp, x + 4, event_y + (i - 1) * 42, 22, { bold = true, maxw = 112 })
+            text(c, ev.summary or "(Sem título)", x + 126, event_y + (i - 1) * 42, 24, { maxw = w - 132 })
+        end
     end
 end
 function Casa:drawFull(c, W, H)
