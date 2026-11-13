@@ -79,13 +79,22 @@ small.note{display:block;color:var(--muted);margin-top:8px}
 <p class="muted">Por enquanto, as datas são manuais. Não há previsão automática de ciclo nesta versão.</p>
 </section>
 <section>
+<h2>Google Agenda</h2>
+<div class="field"><label for="googleClientId">ID do cliente OAuth (Google Cloud)</label><input id="googleClientId" type="text" placeholder="...apps.googleusercontent.com" autocomplete="off"></div>
+<p class="muted">A autorização é feita pelo Google. O editor solicita somente leitura da agenda; a credencial temporária fica na memória desta página. Configure o endereço https://mrschbo.github.io como origem JavaScript autorizada no Google Cloud.</p>
+<div class="actions"><button id="googleConnectBtn">Conectar Google Agenda</button><button id="calendarSyncBtn" class="primary">Sincronizar eventos</button></div>
+<div id="calendarChoices" class="item muted">Conecte sua conta para listar as agendas disponíveis.</div>
+<div id="calendarStatus" class="status" role="status">Nenhuma sincronização realizada.</div>
+</section>
+<section>
 <h2>Prévia dos cálculos</h2><div id="preview" class="muted">Preencha as datas e quantidades para visualizar a estimativa.</div>
 </section>
 </main>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 const OWNER='mrschbo', REPO='kindle-casa-dados', PATH='painel.json';
 const $=id=>document.getElementById(id);
-let tasks=[], bills=[];
+let tasks=[], bills=[], calendarData={calendars:[],selectedIds:[],events:[],syncedAt:null}, googleToken=null, googleTokenClient=null, availableCalendars=[];
 function status(msg,kind=''){const el=$('status');el.textContent=msg;el.className='status '+kind}
 function addItem(which,data={}){const arr=which==='tasks'?tasks:bills;arr.push({title:data.title||data.text||data.name||'',date:data.date||'',done:!!(data.done||data.paid),value:data.value||data.note||''});renderItems(which)}
 function removeItem(which,i){(which==='tasks'?tasks:bills).splice(i,1);renderItems(which)}
@@ -103,14 +112,23 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function collect(){return {version:1,updatedAt:new Date().toISOString(),house:{note:$('houseNote').value},
 cats:{litter:{openedAt:$('litterOpened').value,weightKg:num('litterWeight'),estimatedDays:num('litterDays')},
 food:{openedAt:$('foodOpened').value,weightKg:num('foodWeight'),estimatedDays:num('foodDays')}},
-tasks:tasks.map(it=>({text:it.title,date:it.date,done:!!it.done})),bills:bills.map(it=>({name:it.title,date:it.date,value:it.value||'',paid:!!it.done})),cycles:{K:{date:$('cycleK').value,note:$('cycleKNote').value},E:{date:$('cycleE').value,note:$('cycleENote').value}}}}
+tasks:tasks.map(it=>({text:it.title,date:it.date,done:!!it.done})),bills:bills.map(it=>({name:it.title,date:it.date,value:it.value||'',paid:!!it.done})),cycles:{K:{date:$('cycleK').value,note:$('cycleKNote').value},E:{date:$('cycleE').value,note:$('cycleENote').value}},calendar:calendarData}}
 function num(id){const v=parseFloat($(id).value);return Number.isFinite(v)?v:0}
-function fill(d){$('houseNote').value=d.house?.note||'';
+function fill(d){calendarData=d.calendar&&typeof d.calendar==='object'?d.calendar:{calendars:[],selectedIds:[],events:[],syncedAt:null};renderCalendarChoices();$('houseNote').value=d.house?.note||'';
 $('litterOpened').value=d.cats?.litter?.openedAt||'';$('litterWeight').value=d.cats?.litter?.weightKg??10.5;$('litterDays').value=d.cats?.litter?.estimatedDays??45;
 $('foodOpened').value=d.cats?.food?.openedAt||'';$('foodWeight').value=d.cats?.food?.weightKg??10;$('foodDays').value=d.cats?.food?.estimatedDays??40;
 $('cycleK').value=d.cycles?.K?.date||'';$('cycleKNote').value=d.cycles?.K?.note||'';
 $('cycleE').value=d.cycles?.E?.date||'';$('cycleENote').value=d.cycles?.E?.note||'';
 tasks=Array.isArray(d.tasks)?d.tasks.map(it=>({title:it.title||it.text||it.name||'',date:it.date||'',done:!!it.done,value:''})):[];bills=Array.isArray(d.bills)?d.bills.map(it=>({title:it.title||it.name||it.text||'',date:it.date||'',done:!!(it.paid||it.done),value:it.value||it.note||''})):[];renderItems('tasks');renderItems('bills');preview()}
+
+function calendarStatus(msg,kind=''){const el=$('calendarStatus');el.textContent=msg;el.className='status '+kind}
+function googleClient(){const id=$('googleClientId').value.trim();if(!id)throw Error('Informe o ID do cliente OAuth.');if(!window.google?.accounts?.oauth2)throw Error('A biblioteca de autenticação do Google ainda está carregando.');return id}
+function getGoogleToken(){return new Promise((resolve,reject)=>{try{googleTokenClient=google.accounts.oauth2.initTokenClient({client_id:googleClient(),scope:'https://www.googleapis.com/auth/calendar.readonly',callback:resp=>{if(resp.error){reject(Error(resp.error_description||resp.error));return}googleToken=resp.access_token;resolve(googleToken)},error_callback:err=>reject(Error(err.message||'Falha na autorização Google'))});googleTokenClient.requestAccessToken({prompt:googleToken?'':'consent'})}catch(e){reject(e)}})}
+async function googleApi(url){if(!googleToken)throw Error('Conecte sua conta Google primeiro.');const r=await fetch(url,{headers:{Authorization:'Bearer '+googleToken}});const j=await r.json();if(!r.ok)throw Error(j.error?.message||('Google respondeu '+r.status));return j}
+function renderCalendarChoices(){const root=$('calendarChoices');if(!calendarData.calendars?.length){root.textContent='Conecte sua conta para listar as agendas disponíveis.';return}root.innerHTML='<strong>Agendas incluídas na sincronização</strong>';calendarData.calendars.forEach(cal=>{const label=document.createElement('label');label.style.cssText='display:flex;align-items:center;gap:8px;margin:9px 0;font-weight:500';const cb=document.createElement('input');cb.type='checkbox';cb.checked=(calendarData.selectedIds||[]).includes(cal.id);cb.style.width='auto';cb.onchange=()=>{const ids=new Set(calendarData.selectedIds||[]);cb.checked?ids.add(cal.id):ids.delete(cal.id);calendarData.selectedIds=[...ids]};label.append(cb,document.createTextNode(cal.name+(cal.primary?' (principal)':'')));root.append(label)})}
+async function connectGoogle(){try{calendarStatus('Aguardando autorização do Google...');await getGoogleToken();const data=await googleApi('https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=250');availableCalendars=(data.items||[]).filter(c=>c.accessRole==='owner'||c.accessRole==='writer'||c.accessRole==='reader').map(c=>({id:c.id,name:c.summary||c.id,primary:!!c.primary}));const primary=availableCalendars.find(c=>c.primary);const family=availableCalendars.find(c=>/^fam[ií]lia$/i.test(c.name));calendarData.calendars=availableCalendars;calendarData.selectedIds=[primary?.id,family?.id].filter(Boolean);renderCalendarChoices();calendarStatus('Google conectado. Confira as agendas selecionadas e sincronize os eventos.','ok')}catch(e){calendarStatus('Não foi possível conectar: '+e.message,'err')}}
+async function syncCalendar(){try{if(!googleToken)await getGoogleToken();const selected=availableCalendars.filter(c=>(calendarData.selectedIds||[]).includes(c.id));if(!selected.length)throw Error('Selecione ao menos uma agenda.');calendarStatus('Buscando eventos...');const now=new Date(),end=new Date(now.getTime()+30*86400000),events=[];for(const cal of selected){const q=new URLSearchParams({timeMin:now.toISOString(),timeMax:end.toISOString(),singleEvents:'true',orderBy:'startTime',maxResults:'40'});const data=await googleApi('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(cal.id)+'/events?'+q.toString());for(const ev of data.items||[]){const start=ev.start?.dateTime||ev.start?.date;if(!start)continue;events.push({id:ev.id,summary:ev.summary||'(Sem título)',start,end:ev.end?.dateTime||ev.end?.date||'',allDay:!!ev.start?.date,calendarName:cal.name,location:ev.location||''})}}events.sort((a,b)=>a.start.localeCompare(b.start));calendarData.events=events.slice(0,40);calendarData.syncedAt=new Date().toISOString();calendarData.calendars=selected;calendarStatus(events.length+' eventos sincronizados. Agora clique em “Salvar no GitHub” para enviar ao painel.','ok')}catch(e){calendarStatus('Falha ao sincronizar: '+e.message,'err')}}
+
 function previewOne(label,date,days){if(!date||!days)return `${label}: informe data e duração.`;const start=new Date(date+'T12:00:00'),now=new Date();now.setHours(12,0,0,0);const elapsed=Math.floor((now-start)/86400000),left=days-elapsed,pct=Math.max(0,Math.min(100,left/days*100));return left>=0?`${label}: ${left} dias estimados restantes · ${Math.round(pct)}% do período restante.`:`${label}: estimativa ultrapassada há ${Math.abs(left)} dias · aumente a duração total se ainda houver produto.`}
 function preview(){$('preview').textContent=[previewOne('Areia',$('litterOpened').value,num('litterDays')),previewOne('Ração',$('foodOpened').value,num('foodDays'))].join('\n')}
 document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',preview));
@@ -122,7 +140,7 @@ const content= btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringi
 const body={message:'Atualiza painel Kindle Casa',content,branch:$('branch').value.trim()||'main',...(sha?{sha}:{})};
 await api(PATH,{method:'PUT',body:JSON.stringify(body)});status('Salvo com sucesso em '+REPO+'/'+PATH+'.','ok')
 }catch(e){let msg=e.message;if(msg.includes('Not Found'))msg+=' — confira se o repositório existe e se o token tem acesso.';if(msg.includes('Resource not accessible'))msg+=' — o token precisa de Repository permissions: Contents Read and write.';status('Não foi possível salvar: '+msg,'err')}}
-$('loadBtn').onclick=load;$('saveBtn').onclick=save;
+$('loadBtn').onclick=load;$('saveBtn').onclick=save;$('googleConnectBtn').onclick=connectGoogle;$('calendarSyncBtn').onclick=syncCalendar;
 fill({});
 </script>
 </body></html>
