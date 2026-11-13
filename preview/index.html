@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kindle Casa — Editor</title>
+<style>
+:root{--ink:#202020;--muted:#666;--line:#c9c9c9;--paper:#f7f7f4;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:24px max(18px,calc((100% - 920px)/2));border-bottom:1px solid var(--line);background:#fff}
+h1{font:600 27px Georgia,serif;margin:0 0 4px}header p{margin:0;color:var(--muted)}
+main{max-width:920px;margin:24px auto;padding:0 18px 60px}
+section{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:20px;margin:0 0 16px}
+h2{font:600 21px Georgia,serif;margin:0 0 15px}h3{font-size:16px;margin:18px 0 8px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-size:13px;font-weight:650;color:#444;margin-bottom:5px}
+input,textarea,select{width:100%;font:inherit;padding:10px 11px;border:1px solid #aaa;border-radius:6px;background:#fff;color:var(--ink)}
+textarea{min-height:76px;resize:vertical}
+.field{min-width:0}.muted{color:var(--muted);font-size:13px}
+.item{border:1px solid #ddd;border-radius:8px;padding:12px;margin:10px 0}
+.item-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+button{font:600 14px system-ui;border:1px solid #555;border-radius:6px;padding:9px 13px;background:#fff;color:#222;cursor:pointer}
+button.primary{background:#222;color:#fff;border-color:#222}
+button.danger{border-color:#aaa;color:#555;padding:5px 9px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.status{padding:12px;border:1px solid var(--line);border-radius:7px;margin-top:12px;white-space:pre-wrap}
+.status.ok{border-color:#555}.status.err{border-color:#900;color:#700}
+small.note{display:block;color:var(--muted);margin-top:8px}
+@media(max-width:620px){.grid{grid-template-columns:1fr}section{padding:15px}header{padding:20px 18px}}
+</style>
+</head>
+<body>
+<header><h1>Kindle Casa</h1><p>Editor do painel doméstico · alterações salvas no seu repositório privado</p></header>
+<main>
+<section>
+<h2>Conectar ao GitHub</h2>
+<div class="grid">
+<div class="field"><label for="token">Fine-grained token</label><input id="token" type="password" autocomplete="off" placeholder="Cole seu token aqui"></div>
+<div class="field"><label for="branch">Branch</label><input id="branch" value="main"></div>
+</div>
+<p class="muted">O token fica somente na memória desta página: não é gravado no navegador nem enviado a outro serviço. Ao fechar ou recarregar a página, será necessário colá-lo novamente.</p>
+<div class="actions"><button id="loadBtn">Carregar dados salvos</button><button id="saveBtn" class="primary">Salvar no GitHub</button></div>
+<div id="status" class="status" role="status">Ainda não conectado.</div>
+</section>
+
+<section>
+<h2>Casa</h2>
+<div class="field"><label for="houseNote">Anotação geral</label><textarea id="houseNote" placeholder="Uma nota para aparecer no painel..."></textarea></div>
+</section>
+
+<section>
+<h2>Gatos</h2>
+<p class="muted">Informe o peso do pacote, quando abriu e a duração estimada. O painel calcula o período estimado. Se o pacote durar mais que o previsto, aumente a duração total (por exemplo, de 45 para 50 dias); a data de abertura permanece igual.</p>
+<div class="grid">
+<div><h3>Areia</h3>
+<div class="field"><label for="litterOpened">Data em que abriu</label><input id="litterOpened" type="date"></div>
+<div class="field"><label for="litterWeight">Quantidade (kg)</label><input id="litterWeight" type="number" min="0" step="0.1" value="10.5"></div>
+<div class="field"><label for="litterDays">Duração estimada total (dias)</label><input id="litterDays" type="number" min="1" step="1" value="45"></div>
+</div>
+<div><h3>Ração</h3>
+<div class="field"><label for="foodOpened">Data em que abriu</label><input id="foodOpened" type="date"></div>
+<div class="field"><label for="foodWeight">Quantidade (kg)</label><input id="foodWeight" type="number" min="0" step="0.1" value="10"></div>
+<div class="field"><label for="foodDays">Duração estimada (dias)</label><input id="foodDays" type="number" min="1" step="1" value="40"></div>
+</div></div>
+</section>
+
+<section>
+<h2>Tarefas</h2><div id="tasks"></div><button type="button" onclick="addItem('tasks')">+ Adicionar tarefa</button>
+</section>
+<section>
+<h2>Contas da casa</h2><div id="bills"></div><button type="button" onclick="addItem('bills')">+ Adicionar conta</button>
+</section>
+<section>
+<h2>Ciclos</h2>
+<div class="grid">
+<div><h3>K.</h3><div class="field"><label for="cycleK">Data de referência</label><input id="cycleK" type="date"></div><div class="field"><label for="cycleKNote">Observação</label><input id="cycleKNote" placeholder="Opcional"></div></div>
+<div><h3>E.</h3><div class="field"><label for="cycleE">Data de referência</label><input id="cycleE" type="date"></div><div class="field"><label for="cycleENote">Observação</label><input id="cycleENote" placeholder="Opcional"></div></div>
+</div>
+<p class="muted">Por enquanto, as datas são manuais. Não há previsão automática de ciclo nesta versão.</p>
+</section>
+<section>
+<h2>Google Agenda</h2>
+<div class="field"><label for="googleClientId">ID do cliente OAuth (Google Cloud)</label><input id="googleClientId" type="text" placeholder="...apps.googleusercontent.com" autocomplete="off"></div>
+<p class="muted">A autorização é feita pelo Google. O editor solicita somente leitura da agenda; a credencial temporária fica na memória desta página. Configure o endereço https://mrschbo.github.io como origem JavaScript autorizada no Google Cloud.</p>
+<div class="actions"><button id="googleConnectBtn">Conectar Google Agenda</button><button id="calendarSyncBtn" class="primary">Sincronizar eventos</button></div>
+<div id="calendarChoices" class="item muted">Conecte sua conta para listar as agendas disponíveis.</div>
+<div id="calendarStatus" class="status" role="status">Nenhuma sincronização realizada.</div>
+</section>
+<section>
+<h2>Prévia dos cálculos</h2><div id="preview" class="muted">Preencha as datas e quantidades para visualizar a estimativa.</div>
+</section>
+</main>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+const OWNER='mrschbo', REPO='kindle-casa-dados', PATH='painel.json';
+const $=id=>document.getElementById(id);
+let tasks=[], bills=[], calendarData={calendars:[],selectedIds:[],events:[],syncedAt:null}, googleToken=null, googleTokenClient=null, availableCalendars=[];
+$('googleClientId').value=localStorage.getItem('kindlecasa_google_client_id')||'';
+$('googleClientId').addEventListener('change',()=>localStorage.setItem('kindlecasa_google_client_id',$('googleClientId').value.trim()));
+function status(msg,kind=''){const el=$('status');el.textContent=msg;el.className='status '+kind}
+function addItem(which,data={}){const arr=which==='tasks'?tasks:bills;arr.push({title:data.title||data.text||data.name||'',date:data.date||'',done:!!(data.done||data.paid),value:data.value||data.note||''});renderItems(which)}
+function removeItem(which,i){(which==='tasks'?tasks:bills).splice(i,1);renderItems(which)}
+function renderItems(which){const arr=which==='tasks'?tasks:bills,root=$(which);root.innerHTML='';
+arr.forEach((it,i)=>{const d=document.createElement('div');d.className='item';
+d.innerHTML=`<div class="item-head"><strong>${which==='tasks'?'Tarefa':'Conta'} ${i+1}</strong><button type="button" class="danger" data-remove="${i}">Remover</button></div>
+<div class="grid"><div class="field"><label>Descrição</label><input data-k="title" value="${esc(it.title)}" placeholder="${which==='tasks'?'Ex.: limpar filtro':'Ex.: Energia'}"></div>
+<div class="field"><label>${which==='tasks'?'Prazo':'Vencimento'}</label><input data-k="date" type="date" value="${esc(it.date)}"></div></div>
+${which==='tasks'?'<label style="margin-top:9px"><input data-k="done" type="checkbox" '+(it.done?'checked':'')+' style="width:auto;margin-right:7px">Concluída</label>':'<div class="field" style="margin-top:9px"><label>Valor</label><input data-k="value" value="'+esc(it.value)+'" placeholder="Ex.: R$ 180,00"></div><label style="margin-top:9px"><input data-k="done" type="checkbox" '+(it.done?'checked':'')+' style="width:auto;margin-right:7px">Paga</label>'}`;
+d.querySelector('[data-remove]').onclick=()=>removeItem(which,i);
+d.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('input',()=>{it[el.dataset.k]=el.type==='checkbox'?el.checked:el.value}));
+root.appendChild(d)});
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function collect(){return {version:1,updatedAt:new Date().toISOString(),house:{note:$('houseNote').value},
+cats:{litter:{openedAt:$('litterOpened').value,weightKg:num('litterWeight'),estimatedDays:num('litterDays')},
+food:{openedAt:$('foodOpened').value,weightKg:num('foodWeight'),estimatedDays:num('foodDays')}},
+tasks:tasks.map(it=>({text:it.title,date:it.date,done:!!it.done})),bills:bills.map(it=>({name:it.title,date:it.date,value:it.value||'',paid:!!it.done})),cycles:{K:{date:$('cycleK').value,note:$('cycleKNote').value},E:{date:$('cycleE').value,note:$('cycleENote').value}},calendar:calendarData}}
+function num(id){const v=parseFloat($(id).value);return Number.isFinite(v)?v:0}
+function fill(d){calendarData=d.calendar&&typeof d.calendar==='object'?d.calendar:{calendars:[],selectedIds:[],events:[],syncedAt:null};availableCalendars=Array.isArray(calendarData.calendars)?calendarData.calendars:[];renderCalendarChoices();$('houseNote').value=d.house?.note||'';
+$('litterOpened').value=d.cats?.litter?.openedAt||'';$('litterWeight').value=d.cats?.litter?.weightKg??10.5;$('litterDays').value=d.cats?.litter?.estimatedDays??45;
+$('foodOpened').value=d.cats?.food?.openedAt||'';$('foodWeight').value=d.cats?.food?.weightKg??10;$('foodDays').value=d.cats?.food?.estimatedDays??40;
+$('cycleK').value=d.cycles?.K?.date||'';$('cycleKNote').value=d.cycles?.K?.note||'';
+$('cycleE').value=d.cycles?.E?.date||'';$('cycleENote').value=d.cycles?.E?.note||'';
+tasks=Array.isArray(d.tasks)?d.tasks.map(it=>({title:it.title||it.text||it.name||'',date:it.date||'',done:!!it.done,value:''})):[];bills=Array.isArray(d.bills)?d.bills.map(it=>({title:it.title||it.name||it.text||'',date:it.date||'',done:!!(it.paid||it.done),value:it.value||it.note||''})):[];renderItems('tasks');renderItems('bills');preview()}
+
+function calendarStatus(msg,kind=''){const el=$('calendarStatus');el.textContent=msg;el.className='status '+kind}
+function googleClient(){const id=$('googleClientId').value.trim();if(!id)throw Error('Informe o ID do cliente OAuth.');if(!window.google?.accounts?.oauth2)throw Error('A biblioteca de autenticação do Google ainda está carregando.');return id}
+function getGoogleToken(){return new Promise((resolve,reject)=>{try{googleTokenClient=google.accounts.oauth2.initTokenClient({client_id:googleClient(),scope:'https://www.googleapis.com/auth/calendar.readonly',callback:resp=>{if(resp.error){reject(Error(resp.error_description||resp.error));return}googleToken=resp.access_token;resolve(googleToken)},error_callback:err=>reject(Error(err.message||'Falha na autorização Google'))});googleTokenClient.requestAccessToken({prompt:''})}catch(e){reject(e)}})}
+async function googleApi(url){if(!googleToken)throw Error('Conecte sua conta Google primeiro.');const r=await fetch(url,{headers:{Authorization:'Bearer '+googleToken}});const j=await r.json();if(!r.ok)throw Error(j.error?.message||('Google respondeu '+r.status));return j}
+function renderCalendarChoices(){const root=$('calendarChoices');if(!calendarData.calendars?.length){root.textContent='Conecte sua conta para listar as agendas disponíveis.';return}root.innerHTML='<strong>Agendas incluídas na sincronização</strong>';calendarData.calendars.forEach(cal=>{const label=document.createElement('label');label.style.cssText='display:flex;align-items:center;gap:8px;margin:9px 0;font-weight:500';const cb=document.createElement('input');cb.type='checkbox';cb.checked=(calendarData.selectedIds||[]).includes(cal.id);cb.style.width='auto';cb.onchange=()=>{const ids=new Set(calendarData.selectedIds||[]);cb.checked?ids.add(cal.id):ids.delete(cal.id);calendarData.selectedIds=[...ids]};label.append(cb,document.createTextNode(cal.name+(cal.primary?' (principal)':'')));root.append(label)})}
+async function connectGoogle(){try{calendarStatus('Aguardando autorização do Google...');await getGoogleToken();const data=await googleApi('https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=250');availableCalendars=(data.items||[]).filter(c=>c.accessRole==='owner'||c.accessRole==='writer'||c.accessRole==='reader').map(c=>({id:c.id,name:c.summary||c.id,primary:!!c.primary}));const primary=availableCalendars.find(c=>c.primary);const family=availableCalendars.find(c=>/^fam[ií]lia$/i.test(c.name));calendarData.calendars=[primary,family].filter(Boolean);calendarData.selectedIds=calendarData.calendars.map(c=>c.id);renderCalendarChoices();calendarStatus(family?'Google conectado. Agendas principal e Família selecionadas.':'Google conectado, mas não encontrei uma agenda chamada Família. Confira a conta Google.','ok')}catch(e){calendarStatus('Não foi possível conectar: '+e.message,'err')}}
+async function syncCalendar(){try{if(!googleToken)await getGoogleToken();const selected=availableCalendars.filter(c=>(calendarData.selectedIds||[]).includes(c.id));if(!selected.length)throw Error('Selecione ao menos uma agenda.');calendarStatus('Buscando eventos...');const now=new Date(),end=new Date(now.getTime()+30*86400000),events=[];for(const cal of selected){const q=new URLSearchParams({timeMin:now.toISOString(),timeMax:end.toISOString(),singleEvents:'true',orderBy:'startTime',maxResults:'40'});const data=await googleApi('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(cal.id)+'/events?'+q.toString());for(const ev of data.items||[]){const start=ev.start?.dateTime||ev.start?.date;if(!start)continue;events.push({summary:ev.summary||'(Sem título)',start,end:ev.end?.dateTime||ev.end?.date||'',allDay:!!ev.start?.date,calendarName:cal.name})}}events.sort((a,b)=>new Date(a.start).getTime()-new Date(b.start).getTime());calendarData.events=events.slice(0,40);calendarData.syncedAt=new Date().toISOString();calendarData.calendars=selected;calendarStatus(events.length+' eventos sincronizados. Agora clique em “Salvar no GitHub” para enviar ao painel.','ok')}catch(e){calendarStatus('Falha ao sincronizar: '+e.message,'err')}}
+
+function previewOne(label,date,days){if(!date||!days)return `${label}: informe data e duração.`;const start=new Date(date+'T12:00:00'),now=new Date();now.setHours(12,0,0,0);const elapsed=Math.floor((now-start)/86400000),left=days-elapsed,pct=Math.max(0,Math.min(100,left/days*100));return left>=0?`${label}: ${left} dias estimados restantes · ${Math.round(pct)}% do período restante.`:`${label}: estimativa ultrapassada há ${Math.abs(left)} dias · aumente a duração total se ainda houver produto.`}
+function preview(){$('preview').textContent=[previewOne('Areia',$('litterOpened').value,num('litterDays')),previewOne('Ração',$('foodOpened').value,num('foodDays'))].join('\n')}
+document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',preview));
+function headers(){const t=$('token').value.trim();if(!t)throw Error('Cole seu token antes de continuar.');return {'Accept':'application/vnd.github+json','Authorization':'Bearer '+t,'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'}}
+async function api(path,opts={}){const r=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/'+path,{...opts,headers:{...headers(),...(opts.headers||{})}});const j=await r.json();if(!r.ok)throw Error(j.message||`GitHub respondeu ${r.status}`);return j}
+async function load(){try{status('Buscando dados...');const j=await api(PATH);const raw=atob(j.content.replace(/\n/g,''));const bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));const data=JSON.parse(new TextDecoder().decode(bytes));fill(data);status('Dados carregados do repositório privado.','ok')}catch(e){status('Não foi possível carregar: '+e.message,'err')}}
+async function save(){try{status('Salvando...');let sha;try{sha=(await api(PATH)).sha}catch(e){if(!String(e.message).includes('Not Found'))throw e}
+const content= btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(collect(),null,2))));
+const body={message:'Atualiza painel Kindle Casa',content,branch:$('branch').value.trim()||'main',...(sha?{sha}:{})};
+await api(PATH,{method:'PUT',body:JSON.stringify(body)});status('Salvo com sucesso em '+REPO+'/'+PATH+'.','ok')
+}catch(e){let msg=e.message;if(msg.includes('Not Found'))msg+=' — confira se o repositório existe e se o token tem acesso.';if(msg.includes('Resource not accessible'))msg+=' — o token precisa de Repository permissions: Contents Read and write.';status('Não foi possível salvar: '+msg,'err')}}
+$('loadBtn').onclick=load;$('saveBtn').onclick=save;$('googleConnectBtn').onclick=connectGoogle;$('calendarSyncBtn').onclick=syncCalendar;
+fill({});
+</script>
+</body></html>
