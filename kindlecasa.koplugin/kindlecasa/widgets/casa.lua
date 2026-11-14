@@ -159,16 +159,22 @@ function Casa:drawTile(c, p, focused)
     local function draw_consumable(xx, yy, ww, hh, item, fallback)
         item = item or fallback
         local d = days_until(item.date)
-        text(c, item.label or "", xx, yy, 25, { bold = true, maxw = ww })
         local value = d and (d == 0 and "Hoje" or (d < 0 and ("há " .. math.abs(d) .. " " .. day_word(d)) or (d .. " " .. day_word(d)))) or fmt_date(item.date)
-        text(c, value, xx, yy + 31, 33, { bold = true, maxw = ww })
+        text(c, item.label or "", xx, yy, 23, { bold = true, maxw = ww })
+        -- Compact stacked cards only have room for the label and the main value.
+        -- Keep the status line for taller layouts so it never collides with the next item.
+        if hh < 105 then
+            text(c, value, xx, yy + 29, 27, { bold = true, maxw = ww })
+            return
+        end
+        text(c, value, xx, yy + 31, 31, { bold = true, maxw = ww })
         local state = d and (d > 0 and "até repor" or (d < 0 and "estimativa ultrapassada" or "repor hoje")) or "previsão"
-        text(c, state, xx, yy + 66, 19, { color = "dark", maxw = ww })
+        text(c, state, xx, yy + 68, 18, { color = "dark", maxw = ww })
         local total = tonumber(item.total_days) or 0
         local pct = total > 0 and clamp(math.floor((d or 0) / total * 100 + 0.5), 0, 100) or 0
         if hh >= 150 then
-            UI.progress(c, xx, yy + 94, ww, 14, pct / 100, { border = 1 })
-            text(c, pct .. "% restante", xx, yy + 114, 19, { bold = true })
+            UI.progress(c, xx, yy + 96, ww, 14, pct / 100, { border = 1 })
+            text(c, pct .. "% restante", xx, yy + 116, 18, { bold = true })
         end
     end
 
@@ -185,14 +191,18 @@ function Casa:drawTile(c, p, focused)
         if item.id == "weather" then
             local cur = self.weather.data and self.weather.data.current or {}
             local temp = type(cur.temperature_2m) == "number" and (math.floor(cur.temperature_2m + 0.5) .. "°") or "—°"
-            text(c, temp, xx, body_y + 2, math.min(82, math.floor(hh * 0.34)), { bold = true })
-            text(c, self.s.city or "Joinville", xx + 3, body_y + math.min(72, math.floor(hh * 0.38)), 23, { bold = true })
+            local temp_size = math.min(82, math.floor(hh * 0.34))
+            local temp_h = select(2, c:measure(temp, { size = temp_size, bold = true }))
+            text(c, temp, xx, body_y + 2, temp_size, { bold = true })
+            local city_y = body_y + math.max(72, temp_h + 10)
+            text(c, self.s.city or "Joinville", xx + 3, city_y, 23, { bold = true, maxw = ww * 0.58 })
             local desc = "Clima"
             if self.weather.data then
                 local WeatherModule = require("kindlecasa/widgets/weather")
                 desc = WeatherModule.code(cur.weather_code, cur.is_day ~= 0)
             end
-            text(c, desc, xx + 3, body_y + math.min(101, math.floor(hh * 0.53)), 19, { color = "dark", maxw = ww * 0.58 })
+            local city_h = select(2, c:measure(self.s.city or "Joinville", { size = 23, bold = true }))
+            text(c, desc, xx + 3, city_y + city_h + 5, 19, { color = "dark", maxw = ww * 0.58 })
             if item.cw == 2 then
                 local cat_path = self.ctx.data_dir .. "/sleeping-cat.png"
                 local cat_w, cat_h = math.floor(ww * 0.34), math.min(120, hh - 58)
