@@ -104,9 +104,9 @@ function Casa:drawTile(c, p, focused)
         { id = "tasks", size = layout.tasks or "compact" },
         { id = "bills", size = layout.bills or "compact" },
         { id = "cycles", size = layout.cycles or "compact" },
+        { id = "note", size = layout.note or "compact" },
         { id = "agenda", size = layout.agenda or "wide" },
     }
-    blocks[#blocks + 1] = { id = "note", size = layout.note or "compact" }
 
     -- Two-column packing, matching the editor's compact / wide / tall controls.
     local occupied, placements, row_count = {}, {}, 0
