@@ -194,15 +194,18 @@ function Casa:drawTile(c, p, focused)
             local temp_size = math.min(82, math.floor(hh * 0.34))
             local temp_h = select(2, c:measure(temp, { size = temp_size, bold = true }))
             text(c, temp, xx, body_y + 2, temp_size, { bold = true })
-            local city_y = body_y + math.max(72, temp_h + 10)
+            local city_y = body_y + math.max(42, temp_h + 7)
             text(c, self.s.city or "Joinville", xx + 3, city_y, 23, { bold = true, maxw = ww * 0.58 })
+            local city_h = select(2, c:measure(self.s.city or "Joinville", { size = 23, bold = true }))
             local desc = "Clima"
             if self.weather.data then
                 local WeatherModule = require("kindlecasa/widgets/weather")
                 desc = WeatherModule.code(cur.weather_code, cur.is_day ~= 0)
             end
-            local city_h = select(2, c:measure(self.s.city or "Joinville", { size = 23, bold = true }))
-            text(c, desc, xx + 3, city_y + city_h + 5, 19, { color = "dark", maxw = ww * 0.58 })
+            -- Only draw the condition label when the tile has enough room below the city.
+            if city_y + city_h + 27 <= y + hh then
+                text(c, desc, xx + 3, city_y + city_h + 5, 19, { color = "dark", maxw = ww * 0.58 })
+            end
             if item.cw == 2 then
                 local cat_path = self.ctx.data_dir .. "/sleeping-cat.png"
                 local cat_w, cat_h = math.floor(ww * 0.34), math.min(120, hh - 58)
@@ -263,8 +266,9 @@ function Casa:drawTile(c, p, focused)
             if #events == 0 then
                 text(c, agenda.syncedAt and "Sem eventos nos próximos dias" or "Agenda ainda não sincronizada", xx + 3, body_y + 4, 20, { color = "gray", maxw = ww - 6 })
             else
-                local count = math.min(#events, hh < 235 and 3 or 4)
-                local event_h = hh < 235 and 35 or 40
+                local available_h = math.max(0, hh - (body_y - yy) - 4)
+                local count = math.min(#events, 4, math.max(1, math.floor(available_h / 30)))
+                local event_h = math.floor(available_h / count)
                 for i = 1, count do
                     local ev = events[i]
                     local stamp = event_stamp(ev.start, ev.allDay)
