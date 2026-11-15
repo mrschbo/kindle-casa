@@ -151,7 +151,7 @@ function Casa:drawTile(c, p, focused)
         return xx, yy, ww, hh
     end
     local function heading(xx, yy, ww, title, icon)
-        if icon then c:icon(icon, xx, yy + 1, 25, { color = "black" }) end
+        if icon then c:icon(icon, xx, yy + (title == "Agenda" and 1 or 5), 25, { color = "black" }) end
         text(c, title, xx + (icon and 32 or 0), yy, 32, { bold = true })
         c:hline(xx, yy + 44, ww, 2, "black")
         return yy + 58
@@ -168,13 +168,13 @@ function Casa:drawTile(c, p, focused)
             return
         end
         text(c, value, xx, yy + 33, 30, { bold = true, maxw = ww })
-        local state = d and (d > 0 and "até repor" or (d < 0 and "estimativa ultrapassada" or "repor hoje")) or "previsão"
+        local state = d and (d > 0 and "até repor" or (d < 0 and "estimativa ultrapassada" or "repor hoje")) or "Previsão"
         text(c, state, xx, yy + 72, 22, { color = "dark", maxw = ww })
         local total = tonumber(item.total_days) or 0
         local pct = total > 0 and clamp(math.floor((d or 0) / total * 100 + 0.5), 0, 100) or 0
         if hh >= 150 then
-            UI.progress(c, xx, yy + 96, ww, 14, pct / 100, { border = 1 })
-            text(c, pct .. "% restante", xx, yy + 120, 21, { bold = true })
+            UI.progress(c, xx, yy + 102, ww, 14, pct / 100, { border = 1 })
+            text(c, pct .. "% restante", xx, yy + 126, 21, { bold = true })
         end
     end
 
@@ -207,7 +207,7 @@ function Casa:drawTile(c, p, focused)
                 text(c, desc, xx + 3, city_y + city_h + 5, 22, { color = "dark", maxw = ww * 0.58 })
             end
             if item.cw == 2 then
-                local cat_path = self.ctx.data_dir .. "/sleeping-cat.png"
+                local cat_path = self.ctx.asset_dir .. "/sleeping-cat.png"
                 local cat_w, cat_h = math.floor(ww * 0.34), math.min(120, hh - 58)
                 if cat_h > 45 then c:image(cat_path, xx + ww - cat_w, body_y + 2, cat_w, cat_h, { fill = false }) end
             end
