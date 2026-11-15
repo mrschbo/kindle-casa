@@ -107,8 +107,11 @@ end
 function KindleCasa:makeContext(cfg)
     local NetworkMgr = require("ui/network/manager")
     local online = true
+    local source = debug.getinfo(1, "S").source:gsub("^@", "")
+    local plugin_dir = source:match("^(.*)/[^/]+$") or "."
     local ctx = {
         net = require("kindlecasa/net"),
+        asset_dir = plugin_dir .. "/assets",
         data_dir = self:dataDir(),
         cache_dir = self:dataDir() .. "/cache",
         config = cfg,

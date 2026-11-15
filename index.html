@@ -79,6 +79,11 @@ small.note{display:block;color:var(--muted);margin-top:8px}
 <p class="muted">Por enquanto, as datas são manuais. Não há previsão automática de ciclo nesta versão.</p>
 </section>
 <section>
+<h2>Organização no Kindle</h2>
+<p class="muted">Escolha o espaço de cada bloco no painel. Compacto ocupa meia largura; amplo ocupa a largura toda; alto ocupa meia largura e duas alturas.</p>
+<div class="grid" id="layoutControls"></div>
+</section>
+<section>
 <h2>Google Agenda</h2>
 <div class="field"><label for="googleClientId">ID do cliente OAuth (Google Cloud)</label><input id="googleClientId" type="text" placeholder="...apps.googleusercontent.com" autocomplete="off"></div>
 <p class="muted">A autorização é feita pelo Google. O editor solicita somente leitura da agenda; a credencial temporária fica na memória desta página. Configure o endereço https://mrschbo.github.io como origem JavaScript autorizada no Google Cloud.</p>
@@ -94,7 +99,7 @@ small.note{display:block;color:var(--muted);margin-top:8px}
 <script>
 const OWNER='mrschbo', REPO='kindle-casa-dados', PATH='painel.json';
 const $=id=>document.getElementById(id);
-let tasks=[], bills=[], calendarData={calendars:[],selectedIds:[],events:[],syncedAt:null}, googleToken=null, googleTokenClient=null, availableCalendars=[];
+let tasks=[], bills=[], layoutData={weather:'wide',cats:'wide',tasks:'compact',bills:'compact',cycles:'compact',agenda:'wide',note:'compact'}, calendarData={calendars:[],selectedIds:[],events:[],syncedAt:null}, googleToken=null, googleTokenClient=null, availableCalendars=[];
 $('googleClientId').value=localStorage.getItem('kindlecasa_google_client_id')||'';
 $('googleClientId').addEventListener('change',()=>localStorage.setItem('kindlecasa_google_client_id',$('googleClientId').value.trim()));
 function status(msg,kind=''){const el=$('status');el.textContent=msg;el.className='status '+kind}
@@ -114,9 +119,12 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function collect(){return {version:1,updatedAt:new Date().toISOString(),house:{note:$('houseNote').value},
 cats:{litter:{openedAt:$('litterOpened').value,weightKg:num('litterWeight'),estimatedDays:num('litterDays')},
 food:{openedAt:$('foodOpened').value,weightKg:num('foodWeight'),estimatedDays:num('foodDays')}},
-tasks:tasks.map(it=>({text:it.title,date:it.date,done:!!it.done})),bills:bills.map(it=>({name:it.title,date:it.date,value:it.value||'',paid:!!it.done})),cycles:{K:{date:$('cycleK').value,note:$('cycleKNote').value},E:{date:$('cycleE').value,note:$('cycleENote').value}},calendar:calendarData}}
+tasks:tasks.map(it=>({text:it.title,date:it.date,done:!!it.done})),bills:bills.map(it=>({name:it.title,date:it.date,value:it.value||'',paid:!!it.done})),cycles:{K:{date:$('cycleK').value,note:$('cycleKNote').value},E:{date:$('cycleE').value,note:$('cycleENote').value}},layout:layoutData,calendar:calendarData}}
 function num(id){const v=parseFloat($(id).value);return Number.isFinite(v)?v:0}
-function fill(d){calendarData=d.calendar&&typeof d.calendar==='object'?d.calendar:{calendars:[],selectedIds:[],events:[],syncedAt:null};availableCalendars=Array.isArray(calendarData.calendars)?calendarData.calendars:[];renderCalendarChoices();$('houseNote').value=d.house?.note||'';
+const layoutLabels={weather:'Clima',cats:'Gatos',tasks:'Tarefas',bills:'Contas',cycles:'Ciclos',agenda:'Agenda',note:'Anotação'};
+function renderLayoutControls(){const root=$('layoutControls');if(!root)return;root.innerHTML='';
+Object.entries(layoutLabels).forEach(([key,label])=>{const wrap=document.createElement('div');wrap.className='field';const id='layout-'+key;const title=document.createElement('label');title.htmlFor=id;title.textContent=label;const select=document.createElement('select');select.id=id;[['compact','Compacto'],['wide','Amplo'],['tall','Alto']].forEach(([value,name])=>{const option=document.createElement('option');option.value=value;option.textContent=name;select.append(option)});select.value=layoutData[key]||'wide';select.onchange=()=>{layoutData[key]=select.value};wrap.append(title,select);root.append(wrap)})}
+function fill(d){layoutData={weather:'wide',cats:'wide',tasks:'compact',bills:'compact',cycles:'compact',agenda:'wide',note:'compact',...(d.layout||{})};renderLayoutControls();calendarData=d.calendar&&typeof d.calendar==='object'?d.calendar:{calendars:[],selectedIds:[],events:[],syncedAt:null};availableCalendars=Array.isArray(calendarData.calendars)?calendarData.calendars:[];renderCalendarChoices();$('houseNote').value=d.house?.note||'';
 $('litterOpened').value=d.cats?.litter?.openedAt||'';$('litterWeight').value=d.cats?.litter?.weightKg??10.5;$('litterDays').value=d.cats?.litter?.estimatedDays??45;
 $('foodOpened').value=d.cats?.food?.openedAt||'';$('foodWeight').value=d.cats?.food?.weightKg??10;$('foodDays').value=d.cats?.food?.estimatedDays??40;
 $('cycleK').value=d.cycles?.K?.date||'';$('cycleKNote').value=d.cycles?.K?.note||'';

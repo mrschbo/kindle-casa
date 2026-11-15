@@ -77,6 +77,7 @@ function GitHub.toCasaSettings(panel, current)
         cycles = type(panel.cycles) == "table" and panel.cycles or { K = {}, E = {} },
         house = type(panel.house) == "table" and panel.house or {},
         calendar = type(panel.calendar) == "table" and panel.calendar or { events = {} },
+        layout = type(panel.layout) == "table" and panel.layout or {},
         updatedAt = panel.updatedAt,
     }
 end
