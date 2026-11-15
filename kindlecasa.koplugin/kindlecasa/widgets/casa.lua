@@ -152,29 +152,29 @@ function Casa:drawTile(c, p, focused)
     end
     local function heading(xx, yy, ww, title, icon)
         if icon then c:icon(icon, xx, yy + 1, 25, { color = "black" }) end
-        text(c, title, xx + (icon and 32 or 0), yy, 28, { bold = true })
-        c:hline(xx, yy + 34, ww, 2, "black")
-        return yy + 46
+        text(c, title, xx + (icon and 32 or 0), yy, 32, { bold = true })
+        c:hline(xx, yy + 44, ww, 2, "black")
+        return yy + 58
     end
     local function draw_consumable(xx, yy, ww, hh, item, fallback)
         item = item or fallback
         local d = days_until(item.date)
         local value = d and (d == 0 and "Hoje" or (d < 0 and ("há " .. math.abs(d) .. " " .. day_word(d)) or (d .. " " .. day_word(d)))) or fmt_date(item.date)
-        text(c, item.label or "", xx, yy, 23, { bold = true, maxw = ww })
+        text(c, item.label or "", xx, yy, 26, { bold = true, maxw = ww })
         -- Compact stacked cards only have room for the label and the main value.
         -- Keep the status line for taller layouts so it never collides with the next item.
         if hh < 105 then
-            text(c, value, xx, yy + 29, 27, { bold = true, maxw = ww })
+            text(c, value, xx, yy + 31, 28, { bold = true, maxw = ww })
             return
         end
-        text(c, value, xx, yy + 31, 31, { bold = true, maxw = ww })
+        text(c, value, xx, yy + 33, 30, { bold = true, maxw = ww })
         local state = d and (d > 0 and "até repor" or (d < 0 and "estimativa ultrapassada" or "repor hoje")) or "previsão"
-        text(c, state, xx, yy + 68, 18, { color = "dark", maxw = ww })
+        text(c, state, xx, yy + 72, 22, { color = "dark", maxw = ww })
         local total = tonumber(item.total_days) or 0
         local pct = total > 0 and clamp(math.floor((d or 0) / total * 100 + 0.5), 0, 100) or 0
         if hh >= 150 then
             UI.progress(c, xx, yy + 96, ww, 14, pct / 100, { border = 1 })
-            text(c, pct .. "% restante", xx, yy + 116, 18, { bold = true })
+            text(c, pct .. "% restante", xx, yy + 120, 21, { bold = true })
         end
     end
 
@@ -195,16 +195,16 @@ function Casa:drawTile(c, p, focused)
             local temp_h = select(2, c:measure(temp, { size = temp_size, bold = true }))
             text(c, temp, xx, body_y + 2, temp_size, { bold = true })
             local city_y = body_y + math.max(42, temp_h + 7)
-            text(c, self.s.city or "Joinville", xx + 3, city_y, 23, { bold = true, maxw = ww * 0.58 })
-            local city_h = select(2, c:measure(self.s.city or "Joinville", { size = 23, bold = true }))
+            text(c, self.s.city or "Joinville", xx + 3, city_y, 26, { bold = true, maxw = ww * 0.58 })
+            local city_h = select(2, c:measure(self.s.city or "Joinville", { size = 26, bold = true }))
             local desc = "Clima"
             if self.weather.data then
                 local WeatherModule = require("kindlecasa/widgets/weather")
                 desc = WeatherModule.code(cur.weather_code, cur.is_day ~= 0)
             end
             -- Only draw the condition label when the tile has enough room below the city.
-            if city_y + city_h + 27 <= y + hh then
-                text(c, desc, xx + 3, city_y + city_h + 5, 19, { color = "dark", maxw = ww * 0.58 })
+            if city_y + city_h + 30 <= y + hh then
+                text(c, desc, xx + 3, city_y + city_h + 5, 22, { color = "dark", maxw = ww * 0.58 })
             end
             if item.cw == 2 then
                 local cat_path = self.ctx.data_dir .. "/sleeping-cat.png"
@@ -229,23 +229,23 @@ function Casa:drawTile(c, p, focused)
         elseif item.id == "tasks" or item.id == "bills" then
             local is_bill = item.id == "bills"
             local list = is_bill and (self.s.bills or {}) or (self.s.tasks or {})
-            local row_hh = hh >= 300 and 37 or 32
+            local row_hh = hh >= 300 and 44 or 39
             local shown, limit = 0, math.min(5, math.max(1, math.floor((hh - 54) / row_hh)))
             for _, it in ipairs(list) do
                 if shown >= limit then break end
                 local label = is_bill and (it.name or it.text or "") or (it.text or it.name or "")
                 if label ~= "" then
                     local done = is_bill and (it.paid == true or it.done == true) or it.done == true
-                    c:icon(done and UI.ICON.check or UI.ICON.box, xx, body_y + shown * row_hh + 2, 18, { color = "black" })
+                    c:icon(done and UI.ICON.check or UI.ICON.box, xx, body_y + shown * row_hh + 2, 20, { color = "black" })
                     local value = is_bill and (it.value or "") or ""
                     local right = value ~= "" and tostring(value) or nil
-                    text(c, label, xx + 25, body_y + shown * row_hh, 22, { color = done and "gray" or "black", maxw = ww - 34 - (right and 64 or 0) })
-                    if right then text(c, right, xx + ww - 65, body_y + shown * row_hh, 19, { bold = true, maxw = 65, align = "right" }) end
-                    if done then c:hline(xx + 25, body_y + shown * row_hh + 10, math.min(ww - 32, c:measure(label, { size = 22 })), 1, "gray") end
+                    text(c, label, xx + 25, body_y + shown * row_hh, 26, { color = done and "gray" or "black", maxw = ww - 34 - (right and 64 or 0) })
+                    if right then text(c, right, xx + ww - 65, body_y + shown * row_hh, 23, { bold = true, maxw = 65, align = "right" }) end
+                    if done then c:hline(xx + 25, body_y + shown * row_hh + 10, math.min(ww - 32, c:measure(label, { size = 26 })), 1, "gray") end
                     shown = shown + 1
                 end
             end
-            if shown == 0 then text(c, is_bill and "Sem contas anotadas" or "Sem tarefas anotadas", xx, body_y, 19, { color = "gray", maxw = ww }) end
+            if shown == 0 then text(c, is_bill and "Sem contas anotadas" or "Sem tarefas anotadas", xx, body_y, 23, { color = "gray", maxw = ww }) end
 
         elseif item.id == "cycles" then
             local cycles = self.s.cycles or {}
@@ -253,9 +253,9 @@ function Casa:drawTile(c, p, focused)
                 cycle = cycle or {}
                 local d = days_until(cycle.date)
                 local value = cycle.note and cycle.note ~= "" and cycle.note or (d and (d == 0 and "Hoje" or (d > 0 and (d .. " " .. day_word(d)) or ("há " .. math.abs(d) .. " " .. day_word(d)))) or "Sem data")
-                text(c, label, xx + 2, body_y + offset, 22, { bold = true })
-                text(c, value, xx + 48, body_y + offset, 20, { maxw = ww - 55 })
-                if item.cw == 2 then text(c, fmt_date(cycle.date), xx + ww - 100, body_y + offset, 18, { align = "right", maxw = 100 }) end
+                text(c, label, xx + 2, body_y + offset, 26, { bold = true })
+                text(c, value, xx + 48, body_y + offset, 25, { maxw = ww - 55 })
+                if item.cw == 2 then text(c, fmt_date(cycle.date), xx + ww - 100, body_y + offset, 22, { align = "right", maxw = 100 }) end
             end
             cycle_line("K.", cycles.K, 2)
             cycle_line("E.", cycles.E, 43)
@@ -264,22 +264,22 @@ function Casa:drawTile(c, p, focused)
             local agenda = self.s.calendar or {}
             local events = type(agenda.events) == "table" and agenda.events or {}
             if #events == 0 then
-                text(c, agenda.syncedAt and "Sem eventos nos próximos dias" or "Agenda ainda não sincronizada", xx + 3, body_y + 4, 20, { color = "gray", maxw = ww - 6 })
+                text(c, agenda.syncedAt and "Sem eventos nos próximos dias" or "Agenda ainda não sincronizada", xx + 3, body_y + 4, 24, { color = "gray", maxw = ww - 6 })
             else
                 local available_h = math.max(0, hh - (body_y - yy) - 4)
-                local count = math.min(#events, 4, math.max(1, math.floor(available_h / 30)))
+                local count = math.min(#events, 4, math.max(1, math.floor(available_h / 40)))
                 local event_h = math.floor(available_h / count)
                 for i = 1, count do
                     local ev = events[i]
                     local stamp = event_stamp(ev.start, ev.allDay)
-                    text(c, stamp, xx + 3, body_y + (i - 1) * event_h, 19, { bold = true, maxw = 116 })
-                    text(c, ev.summary or "(Sem título)", xx + 126, body_y + (i - 1) * event_h, 21, { maxw = ww - 132 })
+                    text(c, stamp, xx + 3, body_y + (i - 1) * event_h, 23, { bold = true, maxw = 132 })
+                    text(c, ev.summary or "(Sem título)", xx + 142, body_y + (i - 1) * event_h, 26, { maxw = ww - 148 })
                 end
             end
 
         elseif item.id == "note" then
             local note = tostring((self.s.house and self.s.house.note) or "")
-            text(c, note ~= "" and note or "Sem anotação", xx + 2, body_y + 2, 22, { color = note ~= "" and "black" or "gray", maxw = ww - 4 })
+            text(c, note ~= "" and note or "Sem anotação", xx + 2, body_y + 2, 26, { color = note ~= "" and "black" or "gray", maxw = ww - 4 })
         end
     end
 end
