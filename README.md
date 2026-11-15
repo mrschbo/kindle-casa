@@ -10,7 +10,7 @@ Painel doméstico personalizado para Kindle com KOReader.
 
 ## Editor
 
-O editor é publicado pelo GitHub Pages e permite atualizar areia e ração dos gatos, tarefas, contas, datas de referência dos ciclos e anotações gerais.
+O editor é publicado pelo GitHub Pages e permite atualizar areia e ração dos gatos, tarefas, contas, datas de referência dos ciclos e anotações gerais. Também pode sincronizar os próximos eventos do Google Agenda (calendários principal e Família), em modo somente leitura.
 
 ## Privacidade e sincronização
 
@@ -22,6 +22,16 @@ Os dados domésticos ficam no repositório privado `kindle-casa-dados`. O editor
 4. O token fica no `config.json` local do Kindle. Não o publique nem o coloque no repositório público.
 
 As alterações são feitas no editor web. O plugin apenas lê os dados e tenta sincronizar a cada 15 minutos. Sem Wi-Fi, continua exibindo o último painel sincronizado.
+
+### Google Agenda
+
+1. No Google Cloud Console, crie um projeto e habilite a Google Calendar API.
+2. Configure a tela de consentimento OAuth e adicione sua conta como usuário de teste, se o app estiver em modo de teste.
+3. Crie um ID de cliente OAuth do tipo Aplicativo da Web e cadastre `https://mrschbo.github.io` em Origens JavaScript autorizadas.
+4. Cole o ID de cliente no editor, conecte sua conta Google e confirme as agendas principal e Família.
+5. Sincronize os eventos e depois salve o painel no repositório privado.
+
+O editor usa o fluxo OAuth de token do Google com escopo `calendar.readonly`. O token de acesso fica somente na memória da página e não é gravado no GitHub. Quando expirar ou a página for recarregada, será necessário autorizar novamente. O JSON privado guarda apenas nome do evento, início/fim, indicação de evento de dia inteiro e nome da agenda, limitado aos próximos 30 dias e a 40 eventos. O Kindle não recebe credenciais Google e só lê esses dados já sincronizados.
 
 ## Estrutura
 

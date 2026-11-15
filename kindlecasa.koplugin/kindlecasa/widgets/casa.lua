@@ -21,6 +21,16 @@ local function days_until(iso)
     return math.floor((U.dayStart(target) - U.dayStart(U.now())) / 86400 + 0.5), target
 end
 local function clamp(n, lo, hi) return math.max(lo, math.min(hi, n)) end
+local function day_word(n) return math.abs(n) == 1 and "dia" or "dias" end
+local function event_stamp(value, all_day)
+    value = tostring(value or "")
+    local y, m, d, hh, mm = value:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)T(%d%d):(%d%d)")
+    if not y then y, m, d = value:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)") end
+    if not y then return value end
+    local date = d .. "/" .. m
+    if all_day or not hh then return date end
+    return date .. " " .. hh .. ":" .. mm
+end
 local function fmt_date(iso)
     local y,m,d = tostring(iso or ""):match("^(%d%d%d%d)%-(%d%d)%-(%d%d)$")
     if not y then return "—" end
@@ -30,8 +40,8 @@ local function text(c, s, x, y, size, opts)
     opts = opts or {}; c:text(tostring(s or ""), x, y, { size = size, bold = opts.bold, color = opts.color or "black", maxw = opts.maxw, w = opts.w, align = opts.align })
 end
 local function section(c, x, y, w, title, icon)
-    if icon then c:icon(icon, x, y + 1, 25, { color = "black" }) end
-    text(c, title, x + (icon and 36 or 0), y, 28, { bold = true })
+    if icon then c:icon(icon, x, y + 1, 28, { color = "black" }) end
+    text(c, title, x + (icon and 36 or 0), y, 32, { bold = true })
     c:hline(x, y + 37, w, 2, "black")
 end
 function Casa:init()
@@ -52,6 +62,8 @@ function Casa:applyPanel(panel)
     self.s.tasks, self.s.bills = mapped.tasks, mapped.bills
     self.s.cycles = mapped.cycles
     self.s.house = mapped.house
+    self.s.calendar = mapped.calendar
+    self.s.layout = mapped.layout or {}
     self.panel_updated_at = mapped.updatedAt
 end
 
@@ -82,103 +94,196 @@ function Casa:update(now)
     return true
 end
 function Casa:drawTile(c, p, focused)
-    local x, y, w, h = p.x + 22, p.y + 12, p.w - 44, p.h - 24
-    local gap = 24
-    -- Weather + sleeping cat
-    local top_h = math.floor(h * 0.205)
-    local wx = x
-    local cur = self.weather.data and self.weather.data.current or {}
-    local temp = type(cur.temperature_2m) == "number" and (math.floor(cur.temperature_2m + 0.5) .. "°") or "—°"
-    text(c, temp, wx, y + 10, math.min(100, math.floor(top_h * 0.48)), { bold = true })
-    text(c, self.s.city or "Joinville", wx + 4, y + math.floor(top_h * 0.62), 22, { bold = true })
-    if self.weather.data then
-        local code = cur.weather_code
-        local WeatherModule = require("kindlecasa/widgets/weather")
-        local desc = WeatherModule.code(code, cur.is_day ~= 0)
-        text(c, desc, wx + 4, y + math.floor(top_h * 0.78), 17, { color = "dark" })
-    else
-        text(c, "Clima", wx + 4, y + math.floor(top_h * 0.78), 17, { color = "dark" })
-    end
-    local cat_path = self.ctx.data_dir .. "/sleeping-cat.png"
-    local cat_w, cat_h = math.floor(w * 0.43), math.floor(top_h * 0.96)
-    c:image(cat_path, x + w - cat_w, y, cat_w, cat_h, { fill = false })
-    c:hline(x, y + top_h, w, 2, "black")
+    local x, y, w, h = p.x + 18, p.y + 10, p.w - 36, p.h - 20
+    local gap = 14
+    local half = math.floor((w - gap) / 2)
+    local layout = self.s.layout or {}
+    local blocks = {
+        { id = "weather", size = layout.weather or "wide" },
+        { id = "cats", size = layout.cats or "wide" },
+        { id = "tasks", size = layout.tasks or "compact" },
+        { id = "bills", size = layout.bills or "compact" },
+        { id = "cycles", size = layout.cycles or "compact" },
+        { id = "note", size = layout.note or "compact" },
+        { id = "agenda", size = layout.agenda or "wide" },
+    }
 
-    -- Cats / consumables
-    local cy = y + top_h + gap
-    section(c, x, cy, w, "Gatos", 0xF1B0)
-    local block_y = cy + 52
-    local half = math.floor((w - 28) / 2)
-    local function consumable(cx, item, fallback)
-        item = item or fallback
-        local d = days_until(item.date)
-        text(c, item.label or "", cx, block_y, 28, { bold = true })
-        text(c, d and (d == 0 and "Hoje" or (d < 0 and ("há " .. math.abs(d) .. " dias") or (math.abs(d) .. " dias"))) or fmt_date(item.date), cx, block_y + 36, 40, { bold = true })
-        text(c, d and (d > 0 and "até repor" or (d < 0 and "estimativa ultrapassada" or "repor hoje")) or "previsão", cx, block_y + 78, 20, { color = "dark" })
-        local total = tonumber(item.total_days) or 0
-        local pct = total > 0 and clamp(math.floor((d or 0) / total * 100 + 0.5), 0, 100) or 0
-        UI.progress(c, cx, block_y + 112, half - 18, 18, pct / 100, { border = 2 })
-        text(c, pct .. "% restante", cx, block_y + 140, 21, { bold = true })
-    end
-    consumable(x, self.s.sand, { label = "Areia", date = "", total_days = 0 })
-    c:vline(x + half + 14, block_y - 2, 166, 1, "gray")
-    consumable(x + half + 28, self.s.food, { label = "Ração", date = "", total_days = 0 })
-    local cats_end = block_y + 178
-    c:hline(x, cats_end, w, 2, "black")
-
-    -- Tasks and bills side by side
-    local lists_y = cats_end + gap
-    local colw = math.floor((w - 30) / 2)
-    section(c, x, lists_y, colw, "Tarefas", 0xF046)
-    section(c, x + colw + 30, lists_y, colw, "Contas", 0xF155)
-    local row_y = lists_y + 52
-    local function draw_items(items, xx, width, bills)
-        local shown = 0
-        for _, it in ipairs(items or {}) do
-            if shown >= 5 then break end
-            local label = bills and (it.name or it.text or "") or (it.text or it.name or "")
-            if label ~= "" then
-                local done = bills and (it.paid == true or it.done == true) or it.done == true
-                local icon = done and UI.ICON.check or UI.ICON.box
-                c:icon(icon, xx, row_y + shown * 48 + 2, 19, { color = "black" })
-                local value = bills and (it.value or "") or ""
-                local right = value ~= "" and tostring(value) or nil
-                text(c, label, xx + 28, row_y + shown * 48, 22, { color = done and "gray" or "black", maxw = width - 36 - (right and 72 or 0) })
-                if right then text(c, right, xx + width - 76, row_y + shown * 48, 20, { bold = true, maxw = 76, align = "right" }) end
-                if done then c:hline(xx + 28, row_y + shown * 48 + 11, math.min(width - 40, c:measure(label, { size = 22 })), 1, "gray") end
-                shown = shown + 1
+    -- Two-column packing, matching the editor's compact / wide / tall controls.
+    local occupied, placements, row_count = {}, {}, 0
+    local function cell_free(col, row, cw, rh)
+        for rr = row, row + rh - 1 do
+            occupied[rr] = occupied[rr] or {}
+            for cc = col, col + cw - 1 do
+                if cc > 2 or occupied[rr][cc] then return false end
             end
         end
-        if shown == 0 then text(c, bills and "Sem contas anotadas" or "Sem tarefas anotadas", xx, row_y, 20, { color = "gray" }) end
+        return true
     end
-    draw_items(self.s.tasks, x, colw, false)
-    c:vline(x + colw + 15, lists_y + 4, 280, 1, "gray")
-    draw_items(self.s.bills, x + colw + 30, colw, true)
-    local lists_end = lists_y + 52 + 5 * 48 + 8
-    c:hline(x, lists_end, w, 2, "black")
+    for _, block in ipairs(blocks) do
+        local size = block.size
+        if size ~= "compact" and size ~= "wide" and size ~= "tall" then size = "wide" end
+        local cw, rh = size == "wide" and 2 or 1, size == "tall" and 2 or 1
+        local placed = false
+        for row = 1, 30 do
+            for col = 1, 2 do
+                if cell_free(col, row, cw, rh) then
+                    for rr = row, row + rh - 1 do
+                        occupied[rr] = occupied[rr] or {}
+                        for cc = col, col + cw - 1 do occupied[rr][cc] = true end
+                    end
+                    placements[#placements + 1] = { id = block.id, col = col, row = row, cw = cw, rh = rh }
+                    row_count = math.max(row_count, row + rh - 1)
+                    placed = true
+                    break
+                end
+            end
+            if placed then break end
+        end
+    end
+    row_count = math.max(1, row_count)
+    local row_h = math.floor((h - gap * (row_count - 1)) / row_count)
 
-    -- Cycles: manually entered dates/notes
-    local cy2 = lists_end + gap
-    section(c, x, cy2, w, "Ciclos", 0xF043)
-    local line_y = cy2 + 52
-    local function cycle_line(label, item, yy)
-        item = item or {}
+    local function rect(item)
+        local xx = x + (item.col == 2 and (half + gap) or 0)
+        local yy = y + (item.row - 1) * (row_h + gap)
+        local ww = item.cw == 2 and w or half
+        local hh = item.rh * row_h + (item.rh - 1) * gap
+        return xx, yy, ww, hh
+    end
+    local function heading(xx, yy, ww, title, icon)
+        if icon then c:icon(icon, xx, yy + (title == "Agenda" and 1 or 5), 25, { color = "black" }) end
+        text(c, title, xx + (icon and 32 or 0), yy, 32, { bold = true })
+        c:hline(xx, yy + 44, ww, 2, "black")
+        return yy + 58
+    end
+    local function draw_consumable(xx, yy, ww, hh, item, fallback)
+        item = item or fallback
         local d = days_until(item.date)
-        text(c, label, x + 4, yy, 26, { bold = true })
-        text(c, item.note ~= "" and (item.note or "") or (d and (d == 0 and "Hoje" or (d > 0 and (d .. " dias") or ("há " .. math.abs(d) .. " dias"))) or "Sem data"), x + 72, yy, 23, { maxw = w - 210 })
-        text(c, fmt_date(item.date), x + w - 132, yy, 21, { bold = true, align = "right", maxw = 132 })
+        local value = d and (d == 0 and "Hoje" or (d < 0 and ("há " .. math.abs(d) .. " " .. day_word(d)) or (d .. " " .. day_word(d)))) or fmt_date(item.date)
+        text(c, item.label or "", xx, yy, 26, { bold = true, maxw = ww })
+        -- Compact stacked cards only have room for the label and the main value.
+        -- Keep the status line for taller layouts so it never collides with the next item.
+        if hh < 105 then
+            text(c, value, xx, yy + 31, 28, { bold = true, maxw = ww })
+            return
+        end
+        text(c, value, xx, yy + 33, 30, { bold = true, maxw = ww })
+        local state = d and (d > 0 and "até repor" or (d < 0 and "estimativa ultrapassada" or "repor hoje")) or "Previsão"
+        text(c, state, xx, yy + 72, 22, { color = "dark", maxw = ww })
+        local total = tonumber(item.total_days) or 0
+        local pct = total > 0 and clamp(math.floor((d or 0) / total * 100 + 0.5), 0, 100) or 0
+        if hh >= 150 then
+            UI.progress(c, xx, yy + 102, ww, 14, pct / 100, { border = 1 })
+            text(c, pct .. "% restante", xx, yy + 126, 21, { bold = true })
+        end
     end
-    cycle_line("K.", self.s.cycles and self.s.cycles.K, line_y)
-    cycle_line("E.", self.s.cycles and self.s.cycles.E, line_y + 44)
 
-    local house_note = self.s.house and self.s.house.note
-    if house_note and tostring(house_note) ~= "" then
-        local note_y = line_y + 92
-        c:hline(x, note_y - 12, w, 1, "gray")
-        text(c, "ANOTAÇÃO", x + 4, note_y, 19, { bold = true, color = "dark" })
-        text(c, tostring(house_note), x + 4, note_y + 24, 22, { maxw = w - 8 })
+    for _, item in ipairs(placements) do
+        local xx, yy, ww, hh = rect(item)
+        local body_y = heading(xx, yy, ww, ({
+            weather = "Clima", cats = "Gatos", tasks = "Tarefas",
+            bills = "Contas", cycles = "Ciclos", agenda = "Agenda", note = "Anotação",
+        })[item.id], ({
+            weather = 0xF1A1, cats = 0xF1B0, tasks = 0xF046,
+            bills = 0xF155, cycles = 0xF043, agenda = 0xF073, note = nil,
+        })[item.id])
+
+        if item.id == "weather" then
+            local cur = self.weather.data and self.weather.data.current or {}
+            local temp = type(cur.temperature_2m) == "number" and (math.floor(cur.temperature_2m + 0.5) .. "°") or "—°"
+            local temp_size = math.min(82, math.floor(hh * 0.34))
+            local temp_h = select(2, c:measure(temp, { size = temp_size, bold = true }))
+            text(c, temp, xx, body_y + 2, temp_size, { bold = true })
+            local city_y = body_y + math.max(42, temp_h + 7)
+            text(c, self.s.city or "Joinville", xx + 3, city_y, 26, { bold = true, maxw = ww * 0.58 })
+            local city_h = select(2, c:measure(self.s.city or "Joinville", { size = 26, bold = true }))
+            local desc = "Clima"
+            if self.weather.data then
+                local WeatherModule = require("kindlecasa/widgets/weather")
+                desc = WeatherModule.code(cur.weather_code, cur.is_day ~= 0)
+            end
+            -- Only draw the condition label when the tile has enough room below the city.
+            if city_y + city_h + 30 <= y + hh then
+                text(c, desc, xx + 3, city_y + city_h + 5, 22, { color = "dark", maxw = ww * 0.58 })
+            end
+            if item.cw == 2 then
+                local cat_path = self.ctx.asset_dir .. "/sleeping-cat.png"
+                local cat_w, cat_h = math.floor(ww * 0.34), math.min(120, hh - 58)
+                if cat_h > 45 then c:image(cat_path, xx + ww - cat_w, body_y + 2, cat_w, cat_h, { fill = false }) end
+            end
+
+        elseif item.id == "cats" then
+            local sand = self.s.sand or { label = "Areia", date = "", total_days = 0 }
+            local food = self.s.food or { label = "Ração", date = "", total_days = 0 }
+            if item.cw == 2 then
+                local col = math.floor((ww - 24) / 2)
+                draw_consumable(xx, body_y, col, hh - 50, sand, { label = "Areia", date = "", total_days = 0 })
+                c:vline(xx + col + 12, body_y, math.max(30, hh - 58), 1, "gray")
+                draw_consumable(xx + col + 24, body_y, col, hh - 50, food, { label = "Ração", date = "", total_days = 0 })
+            else
+                local each = math.max(72, math.floor((hh - 54) / 2))
+                draw_consumable(xx, body_y, ww, each, sand, { label = "Areia", date = "", total_days = 0 })
+                draw_consumable(xx, body_y + each, ww, each, food, { label = "Ração", date = "", total_days = 0 })
+            end
+
+        elseif item.id == "tasks" or item.id == "bills" then
+            local is_bill = item.id == "bills"
+            local list = is_bill and (self.s.bills or {}) or (self.s.tasks or {})
+            local row_hh = hh >= 300 and 44 or 39
+            local shown, limit = 0, math.min(5, math.max(1, math.floor((hh - 54) / row_hh)))
+            for _, it in ipairs(list) do
+                if shown >= limit then break end
+                local label = is_bill and (it.name or it.text or "") or (it.text or it.name or "")
+                if label ~= "" then
+                    local done = is_bill and (it.paid == true or it.done == true) or it.done == true
+                    c:icon(done and UI.ICON.check or UI.ICON.box, xx, body_y + shown * row_hh + 2, 20, { color = "black" })
+                    local value = is_bill and (it.value or "") or ""
+                    local right = value ~= "" and tostring(value) or nil
+                    text(c, label, xx + 25, body_y + shown * row_hh, 26, { color = done and "gray" or "black", maxw = ww - 34 - (right and 64 or 0) })
+                    if right then text(c, right, xx + ww - 65, body_y + shown * row_hh, 23, { bold = true, maxw = 65, align = "right" }) end
+                    if done then c:hline(xx + 25, body_y + shown * row_hh + 10, math.min(ww - 32, c:measure(label, { size = 26 })), 1, "gray") end
+                    shown = shown + 1
+                end
+            end
+            if shown == 0 then text(c, is_bill and "Sem contas anotadas" or "Sem tarefas anotadas", xx, body_y, 23, { color = "gray", maxw = ww }) end
+
+        elseif item.id == "cycles" then
+            local cycles = self.s.cycles or {}
+            local function cycle_line(label, cycle, offset)
+                cycle = cycle or {}
+                local d = days_until(cycle.date)
+                local value = cycle.note and cycle.note ~= "" and cycle.note or (d and (d == 0 and "Hoje" or (d > 0 and (d .. " " .. day_word(d)) or ("há " .. math.abs(d) .. " " .. day_word(d)))) or "Sem data")
+                text(c, label, xx + 2, body_y + offset, 26, { bold = true })
+                text(c, value, xx + 48, body_y + offset, 25, { maxw = ww - 55 })
+                if item.cw == 2 then text(c, fmt_date(cycle.date), xx + ww - 100, body_y + offset, 22, { align = "right", maxw = 100 }) end
+            end
+            cycle_line("K.", cycles.K, 2)
+            cycle_line("E.", cycles.E, 43)
+
+        elseif item.id == "agenda" then
+            local agenda = self.s.calendar or {}
+            local events = type(agenda.events) == "table" and agenda.events or {}
+            if #events == 0 then
+                text(c, agenda.syncedAt and "Sem eventos nos próximos dias" or "Agenda ainda não sincronizada", xx + 3, body_y + 4, 24, { color = "gray", maxw = ww - 6 })
+            else
+                local available_h = math.max(0, hh - (body_y - yy) - 4)
+                local count = math.min(#events, 4, math.max(1, math.floor(available_h / 40)))
+                local event_h = math.floor(available_h / count)
+                for i = 1, count do
+                    local ev = events[i]
+                    local stamp = event_stamp(ev.start, ev.allDay)
+                    text(c, stamp, xx + 3, body_y + (i - 1) * event_h, 23, { bold = true, maxw = 132 })
+                    text(c, ev.summary or "(Sem título)", xx + 142, body_y + (i - 1) * event_h, 26, { maxw = ww - 148 })
+                end
+            end
+
+        elseif item.id == "note" then
+            local note = tostring((self.s.house and self.s.house.note) or "")
+            text(c, note ~= "" and note or "Sem anotação", xx + 2, body_y + 2, 26, { color = note ~= "" and "black" or "gray", maxw = ww - 4 })
+        end
     end
 end
+
 function Casa:drawFull(c, W, H)
     self:drawTile(c, { x = 0, y = 0, w = W, h = H, cw = 1, ch = 1 }, false)
 end

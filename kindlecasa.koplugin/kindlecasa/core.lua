@@ -192,7 +192,7 @@ end
 
 function Core:menuRect()
     local mw = math.min(self.W - 60, 600)
-    local mh = 86 + #self.menu.items * 68
+    local mh = 92 + #self.menu.items * 82
     return math.floor((self.W - mw) / 2), math.floor((self.H - mh) / 2), mw, mh
 end
 
@@ -201,12 +201,12 @@ function Core:drawMenu(c)
     c:roundrect(x + 6, y + 6, w, h, "gray", 16)
     c:roundrect(x, y, w, h, "white", 16)
     c:frame(x, y, w, h, 3, "black", 16)
-    c:text("PAINEL DA CASA", x, y + 20, { size = 25, bold = true, w = w, align = "center" })
+    c:text("PAINEL DA CASA", x, y + 20, { size = 29, bold = true, w = w, align = "center" })
     c:hline(x + 24, y + 62, w - 48, 2, "gray")
-    local yy = y + 72
+    local yy = y + 78
     for i, it in ipairs(self.menu.items) do
-        UI.row(c, x + 28, yy, w - 56, { text = it.label, icon = it.icon, size = 23, selected = i == self.menu.sel, height = 58 })
-        yy = yy + 66
+        UI.row(c, x + 28, yy, w - 56, { text = it.label, icon = it.icon, size = 29, selected = i == self.menu.sel, height = 72 })
+        yy = yy + 78
     end
 end
 
@@ -334,7 +334,7 @@ end
 function Core:tap(x, y)
     if self.menu then
         local mx, my, mw = self:menuRect()
-        local i = math.floor((y - my - 72) / 66) + 1
+        local i = math.floor((y - my - 78) / 78) + 1
         if x >= mx and x <= mx + mw and i >= 1 and i <= #self.menu.items then
             self.menu.sel = i
             return self:key("Press")
